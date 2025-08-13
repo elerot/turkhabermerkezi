@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar, Clock, ExternalLink, Filter, RefreshCw, Newspaper, ImageIcon, CalendarDays, Archive } from 'lucide-react';
+import { ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, /* diğer importlar */ } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001/api';
 
@@ -44,6 +46,7 @@ interface Stats {
 }
 
 export default function NewsApp() {
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<string[]>([]);
@@ -501,38 +504,41 @@ const AdCard = ({ position }: { position: number }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <Newspaper className="h-8 w-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">SaatDakika.com</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button 
-                onClick={triggerFetch} 
-                disabled={fetching}
-                variant="outline"
-                size="sm"
-              >
-                {fetching ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                )}
-                Güncelle
-              </Button>
-              {stats.total_news && (
-                <Badge variant="secondary" className="text-sm">
-                  {stats.total_news} Haber • {stats.total_sources} Kaynak
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+  <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 md:py-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-2 md:space-x-4">
+        <Newspaper className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+        <h1 className="text-lg md:text-2xl font-bold text-gray-900">
+          <span className="block md:hidden">Haberler</span>
+          <span className="hidden md:block">Haber Merkezi</span>
+        </h1>
+      </div>
+      <div className="flex items-center space-x-2 md:space-x-4">
+        <Button
+          onClick={() => fetchNews(1)}
+          disabled={loading}
+          size="sm"
+          className="flex items-center space-x-1 md:space-x-2"
+        >
+          {loading ? (
+            <RefreshCw className="h-3 w-3 md:h-4 md:w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-3 w-3 md:h-4 md:w-4" />
+          )}
+          <span className="hidden sm:inline">Güncelle</span>
+        </Button>
+        {stats.total_news && (
+          <Badge variant="secondary" className="text-xs md:text-sm hidden sm:flex">
+            {stats.total_news} Haber
+          </Badge>
+        )}
+      </div>
+    </div>
+  </div>
+</header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
         {/* Enhanced Filters */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -548,7 +554,22 @@ const AdCard = ({ position }: { position: number }) => {
             )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Mobile collapse filter */}
+          <div className="block md:hidden mb-4">
+            <Button
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+              variant="outline"
+              className="w-full flex items-center justify-between"
+            >
+              <span className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtreler {getFilterSummary() && `(${getFilterSummary()})`}
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${mobileFiltersOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </div>
+
+          <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 ${mobileFiltersOpen ? 'block' : 'hidden md:grid'}`}>
             {/* Source Filter - Full width on left */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -650,7 +671,7 @@ const AdCard = ({ position }: { position: number }) => {
               <Clock className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Hızlı Tarih Seçimi:</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -725,7 +746,7 @@ const AdCard = ({ position }: { position: number }) => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
               {news.map((article, index) => {
                 const items = [];
                 
@@ -733,7 +754,7 @@ const AdCard = ({ position }: { position: number }) => {
                 items.push(
                   <Card key={article.id} className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
                     {/* Image Section */}
-                    <div className="relative h-48 w-full bg-gray-200">
+                    <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
                       {article.image ? (
                         <img 
                           src={article.image} 
@@ -760,9 +781,10 @@ const AdCard = ({ position }: { position: number }) => {
                       )}
                       
                       {/* Source badge overlay */}
-                      <div className="absolute top-3 left-3">
-                        <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800">
-                          {article.source}
+                      <div className="absolute top-2 left-2">
+                        <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
+                          <span className="block sm:hidden">{article.source.split(' ')[0]}</span>
+                          <span className="hidden sm:block">{article.source}</span>
                         </Badge>
                       </div>
                       
@@ -775,14 +797,14 @@ const AdCard = ({ position }: { position: number }) => {
                       </div>
                     </div>
 
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg leading-tight line-clamp-3">
+                    <CardHeader className="pb-2 px-3 md:px-6">
+                      <CardTitle className="text-sm md:text-lg leading-tight line-clamp-2 md:line-clamp-3">
                         {article.title}
                       </CardTitle>
                     </CardHeader>
-                    
-                    <CardContent className="flex-1 flex flex-col pt-0">
-                      <CardDescription className="flex-1 text-sm text-gray-600 mb-4 line-clamp-3">
+
+                    <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
+                      <CardDescription className="flex-1 text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
                         {article.description}
                       </CardDescription>
                       
@@ -860,7 +882,7 @@ const AdCard = ({ position }: { position: number }) => {
 
             {/* Pagination */}
             {pagination.total > 1 && (
-              <div className="flex justify-center items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
                 <Button
                   variant="outline"
                   disabled={currentPage === 1}
@@ -868,14 +890,18 @@ const AdCard = ({ position }: { position: number }) => {
                     setCurrentPage(currentPage - 1);
                     fetchNews(currentPage - 1);
                   }}
+                  size="sm"
+                  className="w-full sm:w-auto"
                 >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
                   Önceki
                 </Button>
                 
-                <span className="text-sm text-gray-600">
-                  Sayfa {pagination.current} / {pagination.total} 
-                  ({pagination.count} haber)
-                </span>
+                <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-gray-600">
+                  <span>Sayfa {pagination.current} / {pagination.total}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>({pagination.count} haber)</span>
+                </div>
                 
                 <Button
                   variant="outline"
@@ -884,8 +910,11 @@ const AdCard = ({ position }: { position: number }) => {
                     setCurrentPage(currentPage + 1);
                     fetchNews(currentPage + 1);
                   }}
+                  size="sm"
+                  className="w-full sm:w-auto"
                 >
                   Sonraki
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             )}

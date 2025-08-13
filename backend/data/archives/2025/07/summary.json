@@ -28,7 +28,7 @@
     "2025-07-30",
     "2025-07-31"
   ],
-  "totalNews": 91,
+  "totalNews": 92,
   "topSources": [
     {
       "source": "NTV Gündem",
@@ -40,12 +40,12 @@
     },
     {
       "source": "Takvim Ana Sayfa",
-      "count": 3
+      "count": 4
     },
     {
       "source": "Hürriyet Ana Sayfa",
       "count": 2
     }
   ],
-  "generated": "2025-08-13T06:35:07.764Z"
+  "generated": "2025-08-13T12:05:08.634Z"
 }

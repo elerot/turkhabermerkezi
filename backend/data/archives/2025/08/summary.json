@@ -17,28 +17,28 @@
     "2025-08-12",
     "2025-08-13"
   ],
-  "totalNews": 3722,
+  "totalNews": 4091,
   "topSources": [
     {
       "source": "CNN Türk Haberler",
-      "count": 1026
+      "count": 1117
     },
     {
       "source": "Hürriyet Ana Sayfa",
-      "count": 618
+      "count": 653
     },
     {
       "source": "Takvim Ana Sayfa",
-      "count": 580
+      "count": 623
     },
     {
       "source": "Anadolu Ajansı Güncel",
-      "count": 481
+      "count": 560
     },
     {
       "source": "Yeni Şafak Ana Sayfa",
-      "count": 352
+      "count": 404
     }
   ],
-  "generated": "2025-08-13T06:35:07.763Z"
+  "generated": "2025-08-13T12:05:08.633Z"
 }
