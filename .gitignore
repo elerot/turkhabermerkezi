@@ -3,6 +3,7 @@
 # dependencies
 /tars
 */node_modules
+*/data
 */.pnp
 */.pnp.*
 */.yarn/*
