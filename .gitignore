@@ -4,7 +4,7 @@
 /tars
 */node_modules
 */data
-*/data/*
+backend/data
 */.pnp
 */.pnp.*
 */.yarn/*
