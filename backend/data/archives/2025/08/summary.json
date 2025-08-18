@@ -15,30 +15,35 @@
     "2025-08-10",
     "2025-08-11",
     "2025-08-12",
-    "2025-08-13"
+    "2025-08-13",
+    "2025-08-14",
+    "2025-08-15",
+    "2025-08-16",
+    "2025-08-17",
+    "2025-08-18"
   ],
-  "totalNews": 4104,
+  "totalNews": 5706,
   "topSources": [
     {
       "source": "CNN Türk Haberler",
-      "count": 1118
-    },
-    {
-      "source": "Hürriyet Ana Sayfa",
-      "count": 653
+      "count": 1384
     },
     {
       "source": "Takvim Ana Sayfa",
-      "count": 623
+      "count": 947
+    },
+    {
+      "source": "Hürriyet Ana Sayfa",
+      "count": 872
     },
     {
       "source": "Anadolu Ajansı Güncel",
-      "count": 560
+      "count": 754
     },
     {
       "source": "Yeni Şafak Ana Sayfa",
-      "count": 412
+      "count": 616
     }
   ],
-  "generated": "2025-08-13T12:10:10.422Z"
+  "generated": "2025-08-18T11:40:14.294Z"
 }
