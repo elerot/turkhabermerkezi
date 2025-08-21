@@ -364,9 +364,9 @@ function loadNewsData() {
 // Save data to file
 function saveNewsData() {
   try {
-    if (newsData.length > 10000) {
-      newsData = newsData.slice(-10000);
-    }
+    // if (newsData.length > 10000) {
+    //   newsData = newsData.slice(-10000);
+    // }
     fs.writeFileSync(NEWS_FILE, JSON.stringify(newsData, null, 2));
     console.log(`💾 ${newsData.length} haber kaydedildi`);
   } catch (error) {
