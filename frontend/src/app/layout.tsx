@@ -34,7 +34,21 @@ export default function RootLayout({
             crossOrigin="anonymous"
             strategy="afterInteractive"
           />
+          
         )}
+        
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HV62F5XDP1"></script>
+ <Script id="google-analytics">
+        {`
+  
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments)}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HV62F5XDP1');
+`}
+        </Script>
+
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
