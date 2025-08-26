@@ -3,8 +3,8 @@
 # dependencies
 /tars
 */node_modules
-/backend/data/archives
-/backend/data/news.json
+backend/data/archives
+backend/data/news.json
 */.pnp
 */.pnp.*
 */.yarn/*

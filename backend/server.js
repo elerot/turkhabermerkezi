@@ -568,6 +568,26 @@ async function fetchNews() {
   }
 }
 
+// Bugünün tarihini döndüren endpoint (cache edilmemeli)
+app.get("/api/today", (req, res) => {
+  const today = new Date();
+  const todayKey = getDateKey(today); // YYYY-MM-DD formatında
+  const [year, month, day] = todayKey.split('-');
+  
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  
+  res.json({
+    today: todayKey,
+    year: year,
+    month: month,
+    day: day,
+    timestamp: today.toISOString(),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  });
+});
+
 // 🚀 CACHED API ROUTES
 
 // Get news with smart caching
