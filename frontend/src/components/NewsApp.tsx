@@ -404,7 +404,8 @@ export default function NewsApp({
   };
 
   const shouldShowAd = (index: number) => {
-    return (index + 1) % 3 === 0;
+    //return (index + 1) % 3 === 0;
+    return index === 4; // 0-indexed, yani 5. haber
   };
 
   // Demo reklam verileri
@@ -535,7 +536,7 @@ export default function NewsApp({
 
   // Production reklam component'i (ileride kullanılacak)
   // Production reklam component'i
-  const ProductionAdCard = ({ position }: { position: number }) => {
+  const ProductionAdCard = () => {//{ position }: { position: number }) => {
     useEffect(() => {
       try {
         // AdSense script'i yükle
@@ -592,15 +593,15 @@ export default function NewsApp({
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
       const hostname = window.location.hostname;
 
-      console.log("Environment:", env);
-      console.log("Hostname:", hostname);
+      //console.log("Environment:", env);
+      //console.log("Hostname:", hostname);
 
       setIsProduction(env === "production" && hostname !== "localhost");
     }, []);
     if (isProduction) {
-      return <ProductionAdCard position={position} />;
+      return <ProductionAdCard />//position={position} />;
     } else {
-      return <ProductionAdCard position={position} />;
+      return <ProductionAdCard />//position={position} />;
     }
   };
 
@@ -729,17 +730,15 @@ export default function NewsApp({
                 Filtreler {getFilterSummary() && `(${getFilterSummary()})`}
               </span>
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  mobileFiltersOpen ? "rotate-180" : ""
-                }`}
+                className={`h-4 w-4 transition-transform ${mobileFiltersOpen ? "rotate-180" : ""
+                  }`}
               />
             </Button>
           </div>
 
           <div
-            className={`grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 ${
-              mobileFiltersOpen ? "block" : "hidden md:grid"
-            }`}
+            className={`grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 ${mobileFiltersOpen ? "block" : "hidden md:grid"
+              }`}
           >
             {/* Source Filter */}
             <div>
@@ -1107,7 +1106,7 @@ export default function NewsApp({
                 .flat()}
             </div>
 
-            {/* ALT PAGİNATİON */}
+            {/* ALT PAGINATION */}
             <PaginationControls />
           </>
         )}
