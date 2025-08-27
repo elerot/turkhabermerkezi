@@ -18,6 +18,7 @@ app.use(express.json());
 const DATA_DIR = "./data";
 const ARCHIVES_DIR = path.join(DATA_DIR, "archives");
 const NEWS_FILE = path.join(DATA_DIR, "news.json");
+const RSS_FEEDS_FILE = path.join(DATA_DIR, "rss-feeds.json");
 
 // Ensure data directories exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -27,41 +28,52 @@ if (!fs.existsSync(ARCHIVES_DIR)) {
   fs.mkdirSync(ARCHIVES_DIR, { recursive: true });
 }
 
-// RSS Feeds
-const feeds = [
-  { url: "https://www.sabah.com.tr/rss/anasayfa.xml", name: "Sabah Ana Sayfa" },
-  { url: "https://www.sabah.com.tr/rss/ekonomi.xml", name: "Sabah Ekonomi" },
-  { url: "https://www.sabah.com.tr/rss/spor.xml", name: "Sabah Spor" },
-  { url: "https://www.sabah.com.tr/rss/dunya.xml", name: "Sabah Dünya" },
-  {
-    url: "https://www.takvim.com.tr/rss/anasayfa.xml",
-    name: "Takvim Ana Sayfa",
-  },
-  {
-    url: "https://www.cnnturk.com/feed/rss/all/news",
-    name: "CNN Türk Haberler",
-  },
-  {
-    url: "https://www.hurriyet.com.tr/rss/anasayfa",
-    name: "Hürriyet Ana Sayfa",
-  },
-  {
-    url: "https://www.milliyet.com.tr/rss/rssnew/gundem.xml",
-    name: "Milliyet Gündem",
-  },
-  { url: "https://www.ntv.com.tr/gundem.rss", name: "NTV Gündem" },
-  { url: "https://www.haberturk.com/rss/manset.xml", name: "Habertürk Manşet" },
-  {
-    url: "https://www.trthaber.com/manset_articles.rss",
-    name: "TRT Haber Manşet",
-  },
-  {
-    url: "https://www.aa.com.tr/tr/rss/default?cat=guncel",
-    name: "Anadolu Ajansı Güncel",
-  },
-  { url: "https://www.yenisafak.com/rss", name: "Yeni Şafak Ana Sayfa" },
-  { url: "https://www.bbc.com/turkce/index.xml", name: "BBC Türkçe" },
-];
+// RSS Feeds - Load from JSON file
+let feeds = [];
+
+// Load RSS feeds from JSON file
+function loadRSSFeeds() {
+  try {
+    if (fs.existsSync(RSS_FEEDS_FILE)) {
+      const data = fs.readFileSync(RSS_FEEDS_FILE, "utf8");
+      const feedsData = JSON.parse(data);
+      
+      // Filter only active feeds
+      feeds = feedsData
+        .filter(feed => feed.aktif === true)
+        .sort((a, b) => (a.priority || 999) - (b.priority || 999))
+        .map(feed => ({
+          url: feed.url,
+          name: feed.kaynak,
+          category: feed.kategori,
+          priority: feed.priority || 999
+        }));
+      
+      console.log(`✅ ${feeds.length} aktif RSS feed yüklendi`);
+    } else {
+      console.log("⚠️ RSS feeds dosyası bulunamadı, varsayılan feed'ler kullanılıyor");
+      // Fallback feeds if file doesn't exist
+      feeds = [
+        { url: "https://www.trthaber.com/manset_articles.rss", name: "TRT Haber", category: "Manşet", priority: 1 },
+        { url: "https://www.haberturk.com/rss/manset.xml", name: "Habertürk", category: "Manşet", priority: 1 }
+      ];
+    }
+  } catch (error) {
+    console.error("❌ RSS feeds yükleme hatası:", error);
+    // Fallback feeds on error
+    feeds = [
+      { url: "https://www.trthaber.com/manset_articles.rss", name: "TRT Haber", category: "Manşet", priority: 1 },
+      { url: "https://www.haberturk.com/rss/manset.xml", name: "Habertürk", category: "Manşet", priority: 1 }
+    ];
+  }
+}
+
+// Reload RSS feeds from file
+function reloadRSSFeeds() {
+  console.log("🔄 RSS feeds yeniden yükleniyor...");
+  loadRSSFeeds();
+  return feeds;
+}
 
 // In-memory data storage
 let newsData = [];
@@ -850,10 +862,22 @@ app.get("/api/archive/:year", (req, res) => {
   }
 });
 
-// Legacy endpoints (cached)
+// Sources endpoint - now reads from RSS feeds file
 app.get("/api/sources", (req, res) => {
-  const metadata = getMetadataFromCache();
-  res.json(metadata.sources);
+  try {
+    // Get unique source names from active RSS feeds
+    const activeSources = feeds
+      .map(feed => feed.name) // feed.name kullan (feed.kaynak değil)
+      .filter((source, index, arr) => arr.indexOf(source) === index) // Remove duplicates
+      .sort();
+    
+    console.log("📡 Sources endpoint: Returning", activeSources.length, "active sources from RSS feeds");
+    console.log("📡 Active sources:", activeSources.slice(0, 5)); // İlk 5 kaynağı log'la
+    res.json(activeSources);
+  } catch (error) {
+    console.error("❌ Error in /api/sources:", error);
+    res.status(500).json({ error: "Sources yüklenirken hata oluştu" });
+  }
 });
 
 app.get("/api/dates", (req, res) => {
@@ -888,6 +912,47 @@ app.post("/api/fetch", async (req, res) => {
         apiResponsesCount: cache.responses.size,
         archivesCount: cache.archives.size,
       },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reload RSS feeds from file
+app.post("/api/reload-feeds", (req, res) => {
+  try {
+    const updatedFeeds = reloadRSSFeeds();
+    
+    // Invalidate cache since sources might have changed
+    invalidateCache();
+    
+    res.json({
+      message: "RSS feeds başarıyla yeniden yüklendi",
+      total_feeds: updatedFeeds.length,
+      feeds: updatedFeeds.map(feed => ({
+        name: feed.name,
+        category: feed.category,
+        priority: feed.priority
+      })),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current RSS feeds info
+app.get("/api/feeds", (req, res) => {
+  try {
+    res.json({
+      total_feeds: feeds.length,
+      feeds: feeds.map(feed => ({
+        name: feed.name,
+        category: feed.category,
+        priority: feed.priority,
+        url: feed.url
+      })),
+      last_reload: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1227,6 +1292,7 @@ app.get("/api/sitemap.xml", (req, res) => {
 
 // Initialize data loading
 loadNewsData();
+loadRSSFeeds(); // Load feeds on startup
 
 // Generate initial archives if data exists
 if (newsData.length > 0) {

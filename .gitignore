@@ -4,6 +4,7 @@
 /tars
 */node_modules
 backend/data/archives
+backend/data/news
 backend/data/news.json
 */.pnp
 */.pnp.*

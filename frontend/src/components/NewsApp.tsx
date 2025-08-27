@@ -97,6 +97,9 @@ export default function NewsApp({
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<string[]>([]);
+  const [sourceSearch, setSourceSearch] = useState<string>("");
+  
+
 
   // Hierarchical date filters
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -160,6 +163,7 @@ export default function NewsApp({
   const handleSourceChange = (source: string) => {
     setSelectedSource(source);
     setCurrentPage(1);
+    setSourceSearch(""); // Search'i temizle
     const url = buildUrl(source, selectedYear, selectedMonth, selectedDay, 1);
     router.push(url);
   };
@@ -212,6 +216,7 @@ export default function NewsApp({
     setSelectedMonth(month);
     setSelectedDay(day);
     setCurrentPage(1);
+    setSourceSearch(""); // Search'i temizle
 
     const url = buildUrl("all", year, month, day, 1);
     router.push(url);
@@ -233,6 +238,7 @@ export default function NewsApp({
         setSelectedMonth(todayMonth);
         setSelectedDay(todayDay);
         setCurrentPage(1);
+        setSourceSearch(""); // Search'i temizle
 
         const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1);
         router.push(todayUrl);
@@ -250,6 +256,7 @@ export default function NewsApp({
         setSelectedMonth(yMonth);
         setSelectedDay(yDay);
         setCurrentPage(1);
+        setSourceSearch(""); // Search'i temizle
 
         const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1);
         router.push(yesterdayUrl);
@@ -264,6 +271,7 @@ export default function NewsApp({
         setSelectedMonth(tmMonth);
         setSelectedDay("all");
         setCurrentPage(1);
+        setSourceSearch(""); // Search'i temizle
 
         const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1);
         router.push(monthUrl);
@@ -277,6 +285,7 @@ export default function NewsApp({
         setSelectedMonth("all");
         setSelectedDay("all");
         setCurrentPage(1);
+        setSourceSearch(""); // Search'i temizle
 
         const yearUrl = buildUrl("all", tyYear, "all", "all", 1);
         router.push(yearUrl);
@@ -319,7 +328,7 @@ export default function NewsApp({
       const data = await response.json();
       setSources(data);
     } catch (error) {
-      console.error("Error fetching sources:", error);
+      console.error("❌ Error fetching sources:", error);
     }
   };
 
@@ -372,6 +381,8 @@ export default function NewsApp({
       console.error("Error fetching stats:", error);
     }
   };
+
+
 
   // Utility functions
   const formatDate = (dateString: string) => {
@@ -689,6 +700,7 @@ export default function NewsApp({
                 )}
                 <span className="hidden sm:inline">Güncelle</span>
               </Button>
+              
               {stats.total_news && (
                 <Badge
                   variant="secondary"
@@ -750,12 +762,31 @@ export default function NewsApp({
                   <SelectValue placeholder="Kaynak seçin" />
                 </SelectTrigger>
                 <SelectContent>
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      placeholder="Kaynak ara..."
+                      value={sourceSearch}
+                      onChange={(e) => setSourceSearch(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {sources.map((source) => (
-                    <SelectItem key={source} value={source}>
-                      {source}
+                  {sources.length === 0 ? (
+                    <SelectItem value="loading" disabled>
+                      Kaynaklar yükleniyor... ({sources.length})
                     </SelectItem>
-                  ))}
+                  ) : (
+                    sources
+                      .filter(source => 
+                        source.toLowerCase().includes(sourceSearch.toLowerCase())
+                      )
+                      .map((source) => (
+                        <SelectItem key={source} value={source}>
+                          {source}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
