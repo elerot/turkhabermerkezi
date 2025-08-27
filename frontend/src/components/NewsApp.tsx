@@ -545,29 +545,85 @@ export default function NewsApp({
     );
   };
 
-  // Production reklam component'i (ileride kullanılacak)
   // Production reklam component'i
-  const ProductionAdCard = () => {//{ position }: { position: number }) => {
-    useEffect(() => {
-      try {
-        // AdSense script'i yükle
-        if (typeof window !== "undefined" && !(window as any).adsbygoogle) {
-          const script = document.createElement("script");
-          script.async = true;
-          script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`;
-          script.crossOrigin = "anonymous";
-          document.head.appendChild(script);
-        }
+  const ProductionAdCard = () => {
+    const [adLoaded, setAdLoaded] = useState(false);
+    const [adError, setAdError] = useState(false);
 
-        // AdSense reklam push
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push(
-          {}
-        );
-      } catch (err) {
-        console.error("AdSense error:", err);
+    useEffect(() => {
+      // Check if AdSense is properly configured
+      if (!process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
+        console.warn("AdSense client ID not configured");
+        setAdError(true);
+        return;
       }
+
+      if (!process.env.NEXT_PUBLIC_ADSENSE_SLOT) {
+        console.warn("AdSense slot ID not configured");
+        setAdError(true);
+        return;
+      }
+
+      let timeoutId: NodeJS.Timeout;
+
+      const initializeAd = () => {
+        try {
+          // Wait for AdSense to be available
+          if (typeof window !== "undefined" && (window as any).adsbygoogle) {
+            try {
+              // Push the ad with proper error handling
+              ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+              setAdLoaded(true);
+            } catch (pushError) {
+              console.error("AdSense push error:", pushError);
+              setAdError(true);
+            }
+          } else {
+            // If AdSense is not ready, wait a bit and try again
+            timeoutId = setTimeout(() => {
+              if (typeof window !== "undefined" && (window as any).adsbygoogle) {
+                initializeAd();
+              } else {
+                console.warn("AdSense not available after timeout");
+                setAdError(true);
+              }
+            }, 2000); // 2 second timeout
+          }
+        } catch (err) {
+          console.error("Ad initialization error:", err);
+          setAdError(true);
+        }
+      };
+
+      // Start initialization process
+      initializeAd();
+
+      // Cleanup function
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
     }, []);
+
+    // If there's an error, show a fallback
+    if (adError) {
+      const isConfigError = !process.env.NEXT_PUBLIC_ADSENSE_CLIENT || !process.env.NEXT_PUBLIC_ADSENSE_SLOT;
+      return (
+        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
+            <div className="text-center p-4">
+              <div className="text-gray-500 text-sm mb-2">
+                {isConfigError ? "AdSense yapılandırılmamış" : "Reklam yüklenemedi"}
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {isConfigError ? "Yapılandırma Hatası" : "Teknik Sorun"}
+              </Badge>
+            </div>
+          </div>
+        </Card>
+      );
+    }
 
     return (
       <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
@@ -588,7 +644,9 @@ export default function NewsApp({
 
           {/* Production indicator */}
           <div className="absolute top-2 right-2">
-            <Badge className="bg-blue-600 text-white text-xs">REKLAM</Badge>
+            <Badge className="bg-blue-600 text-white text-xs">
+              {adLoaded ? "REKLAM" : "YÜKLENİYOR..."}
+            </Badge>
           </div>
         </div>
       </Card>
@@ -597,24 +655,54 @@ export default function NewsApp({
 
   // Ana reklam component'i (environment'a göre demo/production seçer)
   const AdCard = ({ position }: { position: number }) => {
-    const [isProduction, setIsProduction] = useState(false);
+    const [isProduction, setIsProduction] = useState(false); // Default to false
 
     useEffect(() => {
       // Environment kontrolü
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
-      const hostname = window.location.hostname;
+      //const hostname = typeof window !== "undefined" ? window.location.hostname : "";
 
-      //console.log("Environment:", env);
+      console.log("Environment:", env);
       //console.log("Hostname:", hostname);
 
-      setIsProduction(env === "production" && hostname !== "localhost");
+      setIsProduction(env === "production");// && hostname !== "localhost");
     }, []);
+    
+    // In development mode, show demo ads to avoid AdSense errors
     if (isProduction) {
-      return <ProductionAdCard />//position={position} />;
+      return <ProductionAdCard />;
     } else {
-      return <ProductionAdCard />//position={position} />;
+      return <DemoAdCard position={position} />;
     }
   };
+
+  // Global AdSense script loader - REMOVE THIS ENTIRE useEffect
+  // useEffect(() => {
+  //   if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
+  //     // Check if AdSense script is already loaded
+  //     const existingScript = document.querySelector('script[src*="adsbygoogle.js"]');
+  //     if (!existingScript) {
+  //       const script = document.createElement("script");
+  //       script.async = true;
+  //       script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`;
+  //       script.crossOrigin = "anonymous";
+  //       
+  //       script.onload = () => {
+  //         console.log("AdSense script loaded successfully");
+  //       };
+  //       
+  //       script.onerror = () => {
+  //         console.error("Failed to load global AdSense script");
+  //         };
+  //       
+  //       document.head.appendChild(script);
+  //     } else {
+  //       console.log("AdSense script already loaded");
+  //     }
+  //   } else if (typeof window !== "undefined") {
+  //     console.warn("AdSense client ID not configured. Set NEXT_PUBLIC_ADSENSE_CLIENT environment variable.");
+  //   }
+  // }, []);
 
   useEffect(() => {
     // İlk yüklemede sadece metadata'ları çek

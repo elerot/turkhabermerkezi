@@ -25,28 +25,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-        <head>
+      <head>
         {/* Google AdSense Script (Production'da aktif olacak) */}
         {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && (
-          <Script
+          <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
             crossOrigin="anonymous"
-            strategy="afterInteractive"
           />
-          
         )}
-        
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HV62F5XDP1"></script>
- <Script id="google-analytics">
-        {`
-  
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments)}
-  gtag('js', new Date());
 
-  gtag('config', 'G-HV62F5XDP1');
-`}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HV62F5XDP1"></script>
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments)}
+            gtag('js', new Date());
+
+            gtag('config', 'G-HV62F5XDP1');
+          `}
         </Script>
 
       </head>
