@@ -1209,7 +1209,71 @@ app.get("/api/sitemap.xml", (req, res) => {
       });
     }
 
+    // Kaynak bazlı URL'ler (/source/sabah-gazetesi/2025/08/15)
+    // Sadece son 30 güne ait ve popüler kaynaklar için
+    const last30Days = new Date();
+    last30Days.setDate(last30Days.getDate() - 30);
+    const last30DaysKey = getDateKey(last30Days);
 
+    const sources = [...new Set(newsData.map((article) => article.source))];
+    const popularSources = sources.slice(0, 10); // İlk 10 kaynak
+
+    popularSources.forEach((source) => {
+      const sourceSlug = source
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+
+      // Son 30 gündeki bu kaynağın haberlerini al
+      const sourceNews = newsData.filter(
+        (article) =>
+          article.source === source && article.date_key >= last30DaysKey
+      );
+
+      // Tarihleri grupla
+      const sourceDates = [
+        ...new Set(sourceNews.map((article) => article.date_key)),
+      ]
+        .sort()
+        .reverse();
+
+      // Son 7 günü ekle
+      sourceDates.slice(0, 7).forEach((dateKey) => {
+        const [year, month, day] = dateKey.split("-");
+        const dateNews = sourceNews.filter(
+          (article) => article.date_key === dateKey
+        );
+        const dateLastMod =
+          dateNews.length > 0
+            ? new Date(Math.max(...dateNews.map((n) => new Date(n.created_at))))
+                .toISOString()
+                .split("T")[0]
+            : currentDate;
+
+        sitemap += `  <url>
+    <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}</loc>
+    <lastmod>${dateLastMod}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+
+        // Kaynak pagination (eğer 30'dan fazla haber varsa)
+        if (dateNews.length > 30) {
+          const totalPages = Math.ceil(dateNews.length / 30);
+          for (let page = 2; page <= Math.min(totalPages, 5); page++) {
+            // Max 5 sayfa
+            sitemap += `  <url>
+    <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}/${page}</loc>
+    <lastmod>${dateLastMod}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+          }
+        }
+      });
+    });
 
     sitemap += `</urlset>`;
 
