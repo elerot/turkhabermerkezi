@@ -436,38 +436,7 @@ export default function NewsApp({
     return filters.join(" • ");
   };
 
-  const shouldShowAd = (index: number) => {
-    //return (index + 1) % 3 === 0;
-    return index === 4; // 0-indexed, yani 5. haber
-  };
 
-  // Demo reklam verileri
-  const DEMO_ADS = [
-    {
-      title: "Teknoloji Haberleri",
-      description: "En güncel teknoloji haberlerini kaçırmayın!",
-      image:
-        "https://via.placeholder.com/400x200/3B82F6/FFFFFF?text=DEMO+REKLAM+1",
-      link: "#",
-      company: "TechNews Pro",
-    },
-    {
-      title: "Ekonomi Analizi",
-      description: "Uzman görüşleri ve piyasa analizleri",
-      image:
-        "https://via.placeholder.com/400x200/10B981/FFFFFF?text=DEMO+REKLAM+2",
-      link: "#",
-      company: "Finans Merkezi",
-    },
-    {
-      title: "Spor Haberleri",
-      description: "Canlı skorlar ve transfer haberleri",
-      image:
-        "https://via.placeholder.com/400x200/F59E0B/FFFFFF?text=DEMO+REKLAM+3",
-      link: "#",
-      company: "Spor Arena",
-    },
-  ];
   // Pagination component'ini tanımla (NewsApp component'inin içinde)
   const PaginationControls = () => {
     if (pagination.total <= 1) return null;
@@ -504,66 +473,6 @@ export default function NewsApp({
           <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
-    );
-  };
-  // Demo reklam component'i
-  const DemoAdCard = ({ position }: { position: number }) => {
-    const ad = DEMO_ADS[position % DEMO_ADS.length];
-
-    return (
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden border-2 border-green-400 bg-green-50">
-        <div className="relative h-32 sm:h-40 md:h-48 w-full">
-          <img
-            src={ad.image}
-            alt={ad.title}
-            className="w-full h-full object-cover rounded-t-lg"
-          />
-
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-green-600 text-white text-xs">
-              DEMO REKLAM
-            </Badge>
-          </div>
-
-          <div className="absolute top-2 right-2">
-            <Badge
-              variant="outline"
-              className="bg-white text-green-800 text-xs"
-            >
-              AD-{position}
-            </Badge>
-          </div>
-        </div>
-
-        <CardHeader className="pb-2 px-3 md:px-6">
-          <CardTitle className="text-sm md:text-lg leading-tight text-green-800">
-            {ad.title}
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
-          <CardDescription className="flex-1 text-xs md:text-sm text-green-700 mb-3 md:mb-4">
-            {ad.description}
-          </CardDescription>
-
-          <div className="mt-auto space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-green-400 text-green-700 hover:bg-green-100"
-              onClick={() => {
-                alert(`${ad.company} reklamı tıklandı!`);
-              }}
-            >
-              {ad.company} →
-            </Button>
-
-            <div className="text-center p-2 bg-green-100 rounded text-xs text-green-600">
-              🎯 Localhost Demo | Production&apos;da gerçek reklam gösterilecek
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     );
   };
 
@@ -675,56 +584,29 @@ export default function NewsApp({
     );
   };
 
-  // Ana reklam component'i (environment'a göre demo/production seçer)
+  // Reklam gösterim mantığı
+  const shouldShowAd = (index: number) => {
+    return index === 4; // 0-indexed, yani 5. haber
+  };
+
+  // Ana reklam component'i (environment'a göre production seçer)
   const AdCard = ({ position }: { position: number }) => {
-    const [isProduction, setIsProduction] = useState(false); // Default to false
+    const [isProduction, setIsProduction] = useState(false);
 
     useEffect(() => {
       // Environment kontrolü
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
-      //const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-
-      console.log("Environment:", env);
-      //console.log("Hostname:", hostname);
-
-      setIsProduction(env === "production");// && hostname !== "localhost");
+      setIsProduction(env === "production");
     }, []);
     
-    // In development mode, show demo ads to avoid AdSense errors
+    // Production mode'da AdSense reklamları göster
     if (isProduction) {
       return <ProductionAdCard />;
     } else {
-      return <DemoAdCard position={position} />;
+      // Development mode'da reklam gösterme
+      return null;
     }
   };
-
-  // Global AdSense script loader - REMOVE THIS ENTIRE useEffect
-  // useEffect(() => {
-  //   if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
-  //     // Check if AdSense script is already loaded
-  //     const existingScript = document.querySelector('script[src*="adsbygoogle.js"]');
-  //     if (!existingScript) {
-  //       const script = document.createElement("script");
-  //       script.async = true;
-  //       script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`;
-  //       script.crossOrigin = "anonymous";
-  //       
-  //       script.onload = () => {
-  //         console.log("AdSense script loaded successfully");
-  //       };
-  //       
-  //       script.onerror = () => {
-  //         console.error("Failed to load global AdSense script");
-  //         };
-  //       
-  //       document.head.appendChild(script);
-  //     } else {
-  //       console.log("AdSense script already loaded");
-  //     }
-  //   } else if (typeof window !== "undefined") {
-  //     console.warn("AdSense client ID not configured. Set NEXT_PUBLIC_ADSENSE_CLIENT environment variable.");
-  //   }
-  // }, []);
 
   useEffect(() => {
     // İlk yüklemede sadece metadata'ları çek
@@ -1120,31 +1002,19 @@ export default function NewsApp({
                       key={article.id}
                       className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden"
                     >
-                      {/* Image Section */}
-                      <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
-                        {article.image ? (
+                      {/* Image Section - Sadece resim varsa göster */}
+                      {article.image && (
+                        <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
+                        {article.image && (
                           <img
                             src={article.image}
                             alt={article.title}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `
-                                <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                  </svg>
-                                </div>
-                              `;
-                              }
+                              target.style.display = "none";
                             }}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                            <ImageIcon className="w-12 h-12 text-gray-400" />
-                          </div>
                         )}
 
                         {/* Source badge overlay */}
@@ -1168,7 +1038,27 @@ export default function NewsApp({
                             )}
                           </div>
                         </div>
-                      </div>
+                        </div>
+                      )}
+
+                      {/* Source badge ve Date - Resim yoksa üstte göster */}
+                      {!article.image && (
+                        <div className="relative pt-2 px-3 md:px-6 flex items-center justify-between">
+                          <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
+                            <span className="block sm:hidden">
+                              {article.source.split(" ")[0]}
+                            </span>
+                            <span className="hidden sm:block">
+                              {article.source}
+                            </span>
+                          </Badge>
+                          
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {new Date(article.pubDate).toLocaleDateString("tr-TR")}
+                          </div>
+                        </div>
+                      )}
 
                       <CardHeader className="pb-2 px-3 md:px-6">
                         <CardTitle className="text-sm md:text-lg leading-tight line-clamp-2 md:line-clamp-3">
