@@ -126,32 +126,23 @@ export default function NewsApp({
   ) => {
     let url = "";
 
+    // Source seçildiğinde source segment'ini ekle
     if (source !== "all") {
       const sourceSlug = source
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
       url = `/source/${sourceSlug}`;
+    }
 
-      if (year !== "all") {
-        url += `/${year}`;
-        if (month !== "all") {
-          url += `/${month.padStart(2, "0")}`;
-          if (day !== "all") {
-            url += `/${day.padStart(2, "0")}`;
-            if (page > 1) url += `/${page}`;
-          }
-        }
-      }
-    } else {
-      if (year !== "all") {
-        url = `/${year}`;
-        if (month !== "all") {
-          url += `/${month.padStart(2, "0")}`;
-          if (day !== "all") {
-            url += `/${day.padStart(2, "0")}`;
-            if (page > 1) url += `/${page}`;
-          }
+    // Tarih parametrelerini ekle (source'dan bağımsız olarak)
+    if (year !== "all") {
+      url += `/${year}`;
+      if (month !== "all") {
+        url += `/${month.padStart(2, "0")}`;
+        if (day !== "all") {
+          url += `/${day.padStart(2, "0")}`;
+          if (page > 1) url += `/${page}`;
         }
       }
     }
@@ -164,7 +155,9 @@ export default function NewsApp({
     setSelectedSource(source);
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
+    // Yeni source değerini kullan, diğerleri mevcut state'ten al
     const url = buildUrl(source, selectedYear, selectedMonth, selectedDay, 1);
+    console.log("🔍 handleSourceChange - Building URL with:", { source, selectedYear, selectedMonth, selectedDay });
     router.push(url);
   };
 
@@ -193,16 +186,19 @@ export default function NewsApp({
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    // NaN kontrolü
+    const safePage = isNaN(page) || page < 1 ? 1 : page;
+    
+    setCurrentPage(safePage);
     const url = buildUrl(
       selectedSource,
       selectedYear,
       selectedMonth,
       selectedDay,
-      page
+      safePage
     );
     router.push(url);
-    fetchNews(page, selectedSource, selectedYear, selectedMonth, selectedDay); // Parametreleri explicit geç
+    //fetchNews(safePage); // Sadece page parametresi geç, diğerleri state'ten alınır
   };
 
   const handleClearAllFilters = () => {
@@ -294,23 +290,26 @@ export default function NewsApp({
   };
 
   // Fetch functions
-  const fetchNews = async (
-    page = 1,
-    source = selectedSource,
-    year = selectedYear,
-    month = selectedMonth,
-    day = selectedDay
-  ) => {
+  const fetchNews = async (page = 1) => {
+    // NaN kontrolü - page NaN ise 1 kullan
+    const safePage = isNaN(page) || page < 1 ? 1 : page;
+    
     setLoading(true);
     try {
-      let url = `${API_BASE}/news?page=${page}&limit=30`;
-      if (source !== "all") url += `&source=${encodeURIComponent(source)}`;
-      if (year !== "all") url += `&year=${year}`;
-      if (month !== "all") url += `&month=${month}`;
-      if (day !== "all") url += `&day=${day}`;
+      let url = `${API_BASE}/news?page=${safePage}&limit=30`;
+      if (selectedSource !== "all") url += `&source=${encodeURIComponent(selectedSource)}`;
+      if (selectedYear !== "all") url += `&year=${selectedYear}`;
+      if (selectedMonth !== "all") url += `&month=${selectedMonth}`;
+      if (selectedDay !== "all") url += `&day=${selectedDay}`;
 
       console.log("🔍 Fetching news with URL:", url);
-      console.log("🔍 Current filters:", { source, year, month, day, page });
+      console.log("🔍 Current filters:", { selectedSource, selectedYear, selectedMonth, selectedDay, page: safePage });
+      console.log("🔍 State values:", { 
+        selectedSource: typeof selectedSource, 
+        selectedYear: typeof selectedYear, 
+        selectedMonth: typeof selectedMonth, 
+        selectedDay: typeof selectedDay 
+      });
 
       const response = await fetch(url);
       const data = await response.json();
@@ -732,21 +731,24 @@ export default function NewsApp({
       initialPage,
     });
 
-    setSelectedSource(initialSource);
-    setSelectedYear(initialYear);
-    setSelectedMonth(initialMonth);
-    setSelectedDay(initialDay);
-    setCurrentPage(initialPage);
+    // NaN kontrolü ve default değerler
+    const safePage = isNaN(initialPage) || initialPage < 1 ? 1 : initialPage;
+    const safeSource = initialSource || "all";
+    const safeYear = initialYear || "all";
+    const safeMonth = initialMonth || "all";
+    const safeDay = initialDay || "all";
+
+    console.log("🔍 Safe values:", { safeSource, safeYear, safeMonth, safeDay, safePage });
+
+    setSelectedSource(safeSource);
+    setSelectedYear(safeYear);
+    setSelectedMonth(safeMonth);
+    setSelectedDay(safeDay);
+    setCurrentPage(safePage);
 
     // Direkt fetch et - timeout yok
     console.log("🔍 Fetching news immediately");
-    fetchNews(
-      initialPage,
-      initialSource,
-      initialYear,
-      initialMonth,
-      initialDay
-    );
+    fetchNews(safePage);
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage]);
 
   // Loading state
