@@ -672,8 +672,8 @@ export default function NewsApp({
         try {
           if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
             (window as any).Ya.Context.AdvManager.render({
-              "blockId": "R-A-13371244-1",
-              "renderTo": "yandex_rtb_R-A-13371244-1"
+              "blockId": "R-A-17002789-1",
+              "renderTo": "yandex_rtb_R-A-17002789-1"
             });
             setAdLoaded(true);
           } else {
@@ -717,7 +717,7 @@ export default function NewsApp({
         <div className="relative h-48 w-full bg-gray-100">
           {/* Yandex RTB container */}
           <div 
-            id="yandex_rtb_R-A-13371244-1"
+            id="yandex_rtb_R-A-17002789-1"
             className="w-full h-full"
             style={{
               backgroundColor: "#f5f5f5",
