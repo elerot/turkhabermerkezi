@@ -629,13 +629,129 @@ export default function NewsApp({
     );
   };
 
+  // Yandex reklam component'i
+  const YandexAdCard = () => {
+    const [adLoaded, setAdLoaded] = useState(false);
+    const [adError, setAdError] = useState(false);
+
+    useEffect(() => {
+      // Yandex RTB script'ini yükle
+      const loadYandexScript = () => {
+        if (typeof window === "undefined") return;
+
+        // Check if Yandex script is already loaded
+        if ((window as any).Ya && (window as any).Ya.Context) {
+          initializeYandexAd();
+          return;
+        }
+
+        // Load Yandex RTB script
+        const script = document.createElement('script');
+        script.src = 'https://yandex.ru/ads/system/context.js';
+        script.async = true;
+        script.onload = () => {
+          // Initialize yaContextCb if it doesn't exist
+          if (!(window as any).yaContextCb) {
+            (window as any).yaContextCb = [];
+          }
+          
+          // Add our callback to the queue
+          (window as any).yaContextCb.push(() => {
+            initializeYandexAd();
+          });
+        };
+        script.onerror = () => {
+          console.error("Yandex RTB script yüklenemedi");
+          setAdError(true);
+        };
+
+        document.head.appendChild(script);
+      };
+
+      const initializeYandexAd = () => {
+        try {
+          if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
+            (window as any).Ya.Context.AdvManager.render({
+              "blockId": "R-A-13371244-1",
+              "renderTo": "yandex_rtb_R-A-13371244-1"
+            });
+            setAdLoaded(true);
+          } else {
+            console.warn("Yandex Context not available");
+            setAdError(true);
+          }
+        } catch (err) {
+          console.error("Yandex ad initialization error:", err);
+          setAdError(true);
+        }
+      };
+
+      loadYandexScript();
+
+      // Cleanup function
+      return () => {
+        // Cleanup if needed
+      };
+    }, []);
+
+    // If there's an error, show a fallback
+    if (adError) {
+      return (
+        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
+            <div className="text-center p-4">
+              <div className="text-gray-500 text-sm mb-2">
+                Yandex reklam yüklenemedi
+              </div>
+              <Badge variant="outline" className="text-xs">
+                Teknik Sorun
+              </Badge>
+            </div>
+          </div>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+        <div className="relative h-48 w-full bg-gray-100">
+          {/* Yandex RTB container */}
+          <div 
+            id="yandex_rtb_R-A-13371244-1"
+            className="w-full h-full"
+            style={{
+              backgroundColor: "#f5f5f5",
+              minHeight: "192px" // 48 * 4 = 192px (h-48)
+            }}
+          />
+
+          {/* Yandex indicator */}
+          <div className="absolute top-2 right-2">
+            <Badge className="bg-red-600 text-white text-xs">
+              {adLoaded ? "YANDEX" : "YÜKLENİYOR..."}
+            </Badge>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   // Reklam gösterim mantığı
   const shouldShowAd = (index: number) => {
-    return index === 4; // 0-indexed, yani 5. haber
+    // İlk 4 haberden sonra (index === 4) Google reklamı göster
+    // Sonra 4 haber daha geçip (index === 8) Yandex reklamını göster
+    return index === 4 || index === 8;
+  };
+
+  // Hangi reklam türünü göstereceğini belirle
+  const getAdType = (index: number) => {
+    if (index === 4) return "google"; // İlk 4 haberden sonra
+    if (index === 8) return "yandex"; // Sonra 4 haber daha geçip
+    return null;
   };
 
   // Ana reklam component'i (environment'a göre production seçer)
-  const AdCard = ({ position }: { position: number }) => {
+  const AdCard = ({ position, adType }: { position: number; adType: string }) => {
     const [isProduction, setIsProduction] = useState(false);
 
     useEffect(() => {
@@ -644,13 +760,17 @@ export default function NewsApp({
       setIsProduction(env === "production");
     }, []);
     
-    // Production mode'da AdSense reklamları göster
+    // Production mode'da reklam türüne göre göster
     if (isProduction) {
-      return <ProductionAdCard />;
-    } else {
-      // Development mode'da reklam gösterme
-      return null;
+      if (adType === "google") {
+        return <ProductionAdCard />;
+      } else if (adType === "yandex") {
+        return <YandexAdCard />;
+      }
     }
+    
+    // Development mode'da reklam gösterme
+    return null;
   };
 
   useEffect(() => {
@@ -1224,13 +1344,16 @@ export default function NewsApp({
                     </Card>
                   );
 
-                                     // Add ad card after every 3rd news item
-                   if (shouldShowAd(index)) {
-                     const adPosition = Math.floor((index + 1) / 3);
-                     items.push(
-                       <AdCard key={`ad-${adPosition}`} />
-                     );
-                   }
+                                                         // Add ad card after specific news items
+                    if (shouldShowAd(index)) {
+                      const adType = getAdType(index);
+                      if (adType) { // Type guard to ensure adType is not null
+                        const adPosition = Math.floor((index + 1) / 3);
+                        items.push(
+                          <AdCard key={`ad-${adPosition}`} position={adPosition} adType={adType} />
+                        );
+                      }
+                    }
 
                   return items;
                 })

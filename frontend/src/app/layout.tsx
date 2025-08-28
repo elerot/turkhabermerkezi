@@ -45,7 +45,10 @@ export default function RootLayout({
             gtag('config', 'G-HV62F5XDP1');
           `}
         </Script>
-
+        {/*<!-- Yandex.RTB -->*/}
+        <script>window.yaContextCb=window.yaContextCb||[]</script>
+        <script src="https://yandex.ru/ads/system/context.js" async></script>
+        
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
