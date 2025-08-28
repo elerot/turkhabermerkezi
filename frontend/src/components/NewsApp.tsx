@@ -98,6 +98,8 @@ export default function NewsApp({
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<string[]>([]);
   const [sourceSearch, setSourceSearch] = useState<string>("");
+  const [iframeLoadingStates, setIframeLoadingStates] = useState<{ [key: string]: boolean }>({});
+  const [iframeErrorStates, setIframeErrorStates] = useState<{ [key: string]: boolean }>({});
   
 
 
@@ -239,6 +241,49 @@ export default function NewsApp({
 
     const url = buildUrl("all", year, month, day, 1);
     router.push(url);
+  };
+
+  const handleIframeLoad = (articleId: string) => {
+    setIframeLoadingStates(prev => ({
+      ...prev,
+      [articleId]: false
+    }));
+  };
+
+  const handleIframeError = (articleId: string) => {
+    setIframeLoadingStates(prev => ({
+      ...prev,
+      [articleId]: false
+    }));
+    setIframeErrorStates(prev => ({
+      ...prev,
+      [articleId]: true
+    }));
+  };
+
+  const handleIframeOpen = (articleId: string) => {
+    setIframeLoadingStates(prev => ({
+      ...prev,
+      [articleId]: true
+    }));
+    setIframeErrorStates(prev => ({
+      ...prev,
+      [articleId]: false
+    }));
+
+    // 15 saniye sonra hala loading ise error olarak işaretle
+    setTimeout(() => {
+      setIframeLoadingStates(prev => {
+        if (prev[articleId]) {
+          setIframeErrorStates(prevError => ({
+            ...prevError,
+            [articleId]: true
+          }));
+          return { ...prev, [articleId]: false };
+        }
+        return prev;
+      });
+    }, 15000);
   };
 
   const handleQuickDateFilter = (
@@ -1071,7 +1116,11 @@ export default function NewsApp({
                           {article.description}
                         </CardDescription>
 
-                        <Dialog>
+                        <Dialog onOpenChange={(open) => {
+                          if (open) {
+                            handleIframeOpen(article.id);
+                          }
+                        }}>
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
@@ -1081,54 +1130,92 @@ export default function NewsApp({
                               Detaylı Oku
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              {article.image && (
-                                <div className="mb-4 -mx-6 -mt-6">
-                                  <img
-                                    src={article.image}
-                                    alt={article.title}
-                                    className="w-full h-64 object-cover"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                    }}
-                                  />
-                                </div>
-                              )}
-
-                              <div className="flex items-center justify-between mb-3">
-                                <Badge variant="outline">
-                                  {article.source}
-                                </Badge>
-                                <div className="flex items-center text-sm text-gray-500">
-                                  <Calendar className="h-4 w-4 mr-1" />
-                                  {formatDate(article.pubDate)}
-                                </div>
-                              </div>
-                              <DialogTitle className="text-xl leading-tight">
+                                                     <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vw] max-h-[95vh] overflow-hidden p-0">
+                                                         <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
+                                                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
+                                 <Badge variant="outline" className="text-xs sm:text-sm w-fit">
+                                   {article.source}
+                                 </Badge>
+                                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                   {formatDate(article.pubDate)}
+                                 </div>
+                               </div>
+                                                             <DialogTitle className="text-lg sm:text-xl leading-tight">
                                 {article.title}
                               </DialogTitle>
                             </DialogHeader>
 
-                            <div className="space-y-4">
-                              <p className="text-gray-700 leading-relaxed">
-                                {article.description}
-                              </p>
-
-                              <div className="border-t pt-4">
-                                <Button asChild className="w-full">
+                                                         <div className="p-4 sm:p-6">
+                                                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+                                 <p className="text-xs sm:text-sm text-gray-600">
+                                   Haber kaynağından yükleniyor...
+                                 </p>
+                                 <Button asChild size="sm" variant="outline">
                                   <a
                                     href={article.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center"
+                                    className="flex items-center"
                                   >
-                                    <ExternalLink className="h-4 w-4 mr-2" />
-                                    Orijinal Haberi Oku
+                                    <ExternalLink className="h-4 w-4 mr-1" />
+                                    Yeni Sekmede Aç
                                   </a>
                                 </Button>
+                              </div>
+                              
+                                                             {/* Iframe ile haber kaynağını göster */}
+                               <div className="relative w-full h-[70vh] sm:h-[75vh] lg:h-[80vh] xl:h-[85vh] border rounded-lg overflow-hidden">
+                                {iframeErrorStates[article.id] ? (
+                                  /* Error fallback */
+                                                                       <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                                                                              <div className="text-center p-4 sm:p-6">
+                                         <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                                         <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                                           Haber yüklenemedi
+                                         </h3>
+                                         <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+                                        Haber kaynağı iframe içinde gösterilemiyor. 
+                                        Bu genellikle güvenlik politikaları nedeniyle olur.
+                                      </p>
+                                      <Button asChild>
+                                        <a
+                                          href={article.link}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center"
+                                        >
+                                          <ExternalLink className="h-4 w-4 mr-2" />
+                                          Haberi Yeni Sekmede Aç
+                                        </a>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  /* Iframe content */
+                                  <>
+                                    <iframe
+                                      src={article.link}
+                                      title={`${article.title} - ${article.source}`}
+                                      className="w-full h-full"
+                                      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
+                                      loading="lazy"
+                                      onLoad={() => handleIframeLoad(article.id)}
+                                      onError={() => handleIframeError(article.id)}
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    
+                                                                         {/* Loading overlay */}
+                                     {iframeLoadingStates[article.id] && (
+                                       <div className="absolute inset-0 bg-white flex items-center justify-center">
+                                         <div className="text-center">
+                                           <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                                           <p className="text-xs sm:text-sm text-gray-600">Haber kaynağı yükleniyor...</p>
+                                         </div>
+                                       </div>
+                                     )}
+                                  </>
+                                )}
                               </div>
                             </div>
                           </DialogContent>
@@ -1137,13 +1224,13 @@ export default function NewsApp({
                     </Card>
                   );
 
-                  // Add ad card after every 3rd news item
-                  if (shouldShowAd(index)) {
-                    const adPosition = Math.floor((index + 1) / 3);
-                    items.push(
-                      <AdCard key={`ad-${adPosition}`} position={adPosition} />
-                    );
-                  }
+                                     // Add ad card after every 3rd news item
+                   if (shouldShowAd(index)) {
+                     const adPosition = Math.floor((index + 1) / 3);
+                     items.push(
+                       <AdCard key={`ad-${adPosition}`} />
+                     );
+                   }
 
                   return items;
                 })
