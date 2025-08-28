@@ -635,95 +635,119 @@ export default function NewsApp({
     const [adError, setAdError] = useState(false);
 
     useEffect(() => {
-      // Yandex RTB script'ini yükle
-      const loadYandexScript = () => {
-        if (typeof window === "undefined") return;
+             // Yandex RTB script'ini yükle
+       const loadYandexScript = () => {
+         if (typeof window === "undefined") return;
 
-        // Check if Yandex script is already loaded
-        if ((window as any).Ya && (window as any).Ya.Context) {
-          initializeYandexAd();
-          return;
-        }
+         // Check if Yandex script is already loaded
+         if ((window as any).Ya && (window as any).Ya.Context) {
+           initializeYandexAd();
+           return;
+         }
 
-        // Load Yandex RTB script
-        const script = document.createElement('script');
-        script.src = 'https://yandex.ru/ads/system/context.js';
-        script.async = true;
-        script.onload = () => {
-          // Initialize yaContextCb if it doesn't exist
-          if (!(window as any).yaContextCb) {
-            (window as any).yaContextCb = [];
-          }
-          
-          // Add our callback to the queue
-          (window as any).yaContextCb.push(() => {
-            initializeYandexAd();
-          });
-        };
-        script.onerror = () => {
-          console.error("Yandex RTB script yüklenemedi");
-          setAdError(true);
-        };
+         // Check if script is already being loaded
+         if (document.querySelector('script[src*="yandex.ru/ads/system/context.js"]')) {
+           // Script is loading, wait for it
+           setTimeout(() => {
+             if ((window as any).Ya && (window as any).Ya.Context) {
+               initializeYandexAd();
+             } else {
+               setAdError(true);
+             }
+           }, 1000);
+           return;
+         }
 
-        document.head.appendChild(script);
-      };
+         // Load Yandex RTB script
+         const script = document.createElement('script');
+         script.src = 'https://yandex.ru/ads/system/context.js';
+         script.async = true;
+         script.onload = () => {
+           // Initialize yaContextCb if it doesn't exist
+           if (!(window as any).yaContextCb) {
+             (window as any).yaContextCb = [];
+           }
+           
+           // Add our callback to the queue
+           (window as any).yaContextCb.push(() => {
+             initializeYandexAd();
+           });
+         };
+         script.onerror = () => {
+           console.error("Yandex RTB script yüklenemedi");
+           setAdError(true);
+         };
 
-      const initializeYandexAd = () => {
-        try {
-          if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
-            (window as any).Ya.Context.AdvManager.render({
-              "blockId": "R-A-17002789-1",
-              "renderTo": "yandex_rtb_R-A-17002789-1"
-            });
-            setAdLoaded(true);
-          } else {
-            console.warn("Yandex Context not available");
+         document.head.appendChild(script);
+       };
+
+                           const initializeYandexAd = () => {
+          try {
+            if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
+              (window as any).Ya.Context.AdvManager.render({
+                "blockId": "R-A-17002789-1",
+                "renderTo": "yandex_rtb_R-A-17002789-1"
+              });
+              setAdLoaded(true);
+            } else {
+              console.warn("Yandex Context not available");
+              setAdError(true);
+            }
+          } catch (err) {
+            console.error("Yandex ad initialization error:", err);
             setAdError(true);
           }
-        } catch (err) {
-          console.error("Yandex ad initialization error:", err);
-          setAdError(true);
-        }
-      };
+        };
 
-      loadYandexScript();
+       // Timeout ile reklam yükleme kontrolü
+       const timeoutId = setTimeout(() => {
+         if (!adLoaded && !adError) {
+           console.warn("Yandex ad loading timeout");
+           setAdError(true);
+         }
+       }, 10000); // 10 saniye timeout
 
-      // Cleanup function
-      return () => {
-        // Cleanup if needed
-      };
+               loadYandexScript();
+
+                // Cleanup function
+        return () => {
+          clearTimeout(timeoutId);
+        };
     }, []);
 
-    // If there's an error, show a fallback
-    if (adError) {
-      return (
-        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
-            <div className="text-center p-4">
-              <div className="text-gray-500 text-sm mb-2">
-                Yandex reklam yüklenemedi
-              </div>
-              <Badge variant="outline" className="text-xs">
-                Teknik Sorun
-              </Badge>
-            </div>
-          </div>
-        </Card>
-      );
-    }
+         // If there's an error, show a fallback
+     if (adError) {
+       return (
+         <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+           <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
+             <div className="text-center p-4">
+               <div className="text-gray-500 text-sm mb-2">
+                 Yandex reklam yüklenemedi
+               </div>
+               <div className="text-gray-400 text-xs mb-2">
+                 Reklam geçici olarak kullanılamıyor
+               </div>
+               <Badge variant="outline" className="text-xs">
+                 Teknik Sorun
+               </Badge>
+             </div>
+           </div>
+         </Card>
+       );
+     }
 
     return (
       <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
         <div className="relative h-48 w-full bg-gray-100">
-          {/* Yandex RTB container */}
-          <div 
-            id="yandex_rtb_R-A-17002789-1"
-            className="w-full h-full"
-            style={{
-              backgroundColor: "#f5f5f5",
-              minHeight: "192px" // 48 * 4 = 192px (h-48)
-            }}
-          />
+                                           {/* Yandex RTB container */}
+            <div 
+              id="yandex_rtb_R-A-17002789-1"
+              className="w-full h-full"
+              style={{
+                backgroundColor: "#f5f5f5",
+                minHeight: "192px" // 48 * 4 = 192px (h-48)
+              }}
+            />
 
           {/* Yandex indicator */}
           <div className="absolute top-2 right-2">
@@ -1348,9 +1372,8 @@ export default function NewsApp({
                     if (shouldShowAd(index)) {
                       const adType = getAdType(index);
                       if (adType) { // Type guard to ensure adType is not null
-                        const adPosition = Math.floor((index + 1) / 3);
                         items.push(
-                          <AdCard key={`ad-${adPosition}`} position={adPosition} adType={adType} />
+                          <AdCard key={`ad-${index}-${adType}`} position={index} adType={adType} />
                         );
                       }
                     }
