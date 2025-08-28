@@ -75,6 +75,32 @@ function reloadRSSFeeds() {
   return feeds;
 }
 
+// Türkçe karakterleri koruyan slug oluşturma fonksiyonu
+function createTurkishSlug(text) {
+  const turkishCharMap = {
+    'ç': 'c', 'Ç': 'C',
+    'ğ': 'g', 'Ğ': 'G',
+    'ı': 'i', 'I': 'I',
+    'İ': 'I', 'i': 'i',
+    'ö': 'o', 'Ö': 'O',
+    'ş': 's', 'Ş': 'S',
+    'ü': 'u', 'Ü': 'U'
+  };
+  
+  let slug = text;
+  
+  // Türkçe karakterleri değiştir
+  Object.keys(turkishCharMap).forEach(char => {
+    slug = slug.replace(new RegExp(char, 'g'), turkishCharMap[char]);
+  });
+  
+  // Küçük harfe çevir ve URL-friendly yap
+  return slug
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
 // In-memory data storage
 let newsData = [];
 let lastUpdate = new Date();
@@ -646,7 +672,16 @@ app.get("/api/news", (req, res) => {
   }
 
   if (source && source !== "all") {
-    filteredNews = filteredNews.filter((article) => article.source === source);
+    // Hem tam eşleşme hem de slug eşleşmesi kontrol et
+    filteredNews = filteredNews.filter((article) => {
+      // Tam eşleşme kontrolü
+      if (article.source === source) return true;
+      
+      // Slug eşleşmesi kontrolü
+      const articleSlug = createTurkishSlug(article.source);
+      const searchSlug = createTurkishSlug(source);
+      return articleSlug === searchSlug;
+    });
   }
 
   if (hour && hour !== "all") {
@@ -1219,10 +1254,7 @@ app.get("/api/sitemap.xml", (req, res) => {
     const popularSources = sources.slice(0, 10); // İlk 10 kaynak
 
     popularSources.forEach((source) => {
-      const sourceSlug = source
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
+      const sourceSlug = createTurkishSlug(source);
 
       // Son 30 gündeki bu kaynağın haberlerini al
       const sourceNews = newsData.filter(

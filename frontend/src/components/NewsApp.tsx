@@ -128,10 +128,7 @@ export default function NewsApp({
 
     // Source seçildiğinde source segment'ini ekle
     if (source !== "all") {
-      const sourceSlug = source
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
+      const sourceSlug = createTurkishSlug(source);
       url = `/source/${sourceSlug}`;
     }
 
@@ -148,6 +145,32 @@ export default function NewsApp({
     }
 
     return url || "/";
+  };
+
+  // Türkçe karakterleri koruyan slug oluşturma fonksiyonu
+  const createTurkishSlug = (text: string) => {
+    const turkishCharMap: { [key: string]: string } = {
+      'ç': 'c', 'Ç': 'C',
+      'ğ': 'g', 'Ğ': 'G',
+      'ı': 'i', 'I': 'I',
+      'İ': 'I', 'i': 'i',
+      'ö': 'o', 'Ö': 'O',
+      'ş': 's', 'Ş': 'S',
+      'ü': 'u', 'Ü': 'U'
+    };
+    
+    let slug = text;
+    
+    // Türkçe karakterleri değiştir
+    Object.keys(turkishCharMap).forEach(char => {
+      slug = slug.replace(new RegExp(char, 'g'), turkishCharMap[char]);
+    });
+    
+    // Küçük harfe çevir ve URL-friendly yap
+    return slug
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
   };
 
   // Handle fonksiyonları
@@ -868,9 +891,19 @@ export default function NewsApp({
                     </SelectItem>
                   ) : (
                     sources
-                      .filter(source => 
-                        source.toLowerCase().includes(sourceSearch.toLowerCase())
-                      )
+                      .filter(source => {
+                        // Hem tam eşleşme hem de slug eşleşmesi kontrol et
+                        const sourceLower = source.toLowerCase();
+                        const searchLower = sourceSearch.toLowerCase();
+                        
+                        // Tam eşleşme kontrolü
+                        if (sourceLower.includes(searchLower)) return true;
+                        
+                        // Slug eşleşmesi kontrolü
+                        const sourceSlug = createTurkishSlug(source);
+                        const searchSlug = createTurkishSlug(sourceSearch);
+                        return sourceSlug.includes(searchSlug);
+                      })
                       .map((source) => (
                         <SelectItem key={source} value={source}>
                           {source}
