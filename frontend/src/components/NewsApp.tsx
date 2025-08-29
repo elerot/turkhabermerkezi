@@ -108,14 +108,23 @@ export default function NewsApp({
   const [availableMonths, setAvailableMonths] = useState<MonthInfo[]>([]);
   const [availableDays, setAvailableDays] = useState<string[]>([]);
 
-  const [selectedSource, setSelectedSource] = useState(initialSource);
-  const [selectedYear, setSelectedYear] = useState(initialYear);
-  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
-  const [selectedDay, setSelectedDay] = useState(initialDay);
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [selectedSource, setSelectedSource] = useState<string>(initialSource || "all");
+  const [selectedYear, setSelectedYear] = useState<string>(initialYear || "all");
+  const [selectedMonth, setSelectedMonth] = useState<string>(initialMonth || "all");
+  const [selectedDay, setSelectedDay] = useState<string>(initialDay || "all");
+  const [currentPage, setCurrentPage] = useState<number>(initialPage || 1);
 
-  const [pagination, setPagination] = useState<Pagination>({} as Pagination);
-  const [stats, setStats] = useState<Stats>({} as Stats);
+  const [pagination, setPagination] = useState<Pagination>({
+    current: 1,
+    total: 1,
+    count: 0
+  });
+  const [stats, setStats] = useState<Stats>({
+    total_news: 0,
+    total_sources: 0,
+    total_days: 0,
+    last_update: ""
+  });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // URL oluşturma fonksiyonu
@@ -129,17 +138,17 @@ export default function NewsApp({
     let url = "";
 
     // Source seçildiğinde source segment'ini ekle
-    if (source !== "all") {
+    if (source && source !== "all") {
       const sourceSlug = createTurkishSlug(source);
       url = `/source/${sourceSlug}`;
     }
 
     // Tarih parametrelerini ekle (source'dan bağımsız olarak)
-    if (year !== "all") {
+    if (year && year !== "all") {
       url += `/${year}`;
-      if (month !== "all") {
+      if (month && month !== "all") {
         url += `/${month.padStart(2, "0")}`;
-        if (day !== "all") {
+        if (day && day !== "all") {
           url += `/${day.padStart(2, "0")}`;
           if (page > 1) url += `/${page}`;
         }
@@ -151,6 +160,8 @@ export default function NewsApp({
 
   // Türkçe karakterleri koruyan slug oluşturma fonksiyonu
   const createTurkishSlug = (text: string) => {
+    if (!text) return "";
+    
     const turkishCharMap: { [key: string]: string } = {
       'ç': 'c', 'Ç': 'C',
       'ğ': 'g', 'Ğ': 'G',
@@ -177,35 +188,39 @@ export default function NewsApp({
 
   // Handle fonksiyonları
   const handleSourceChange = (source: string) => {
+    if (!source) return;
     setSelectedSource(source);
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
     // Yeni source değerini kullan, diğerleri mevcut state'ten al
-    const url = buildUrl(source, selectedYear, selectedMonth, selectedDay, 1);
+    const url = buildUrl(source, selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1);
     router.push(url);
   };
 
   const handleYearChange = (year: string) => {
+    if (!year) return;
     setSelectedYear(year);
     setSelectedMonth("all");
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource, year, "all", "all", 1);
+    const url = buildUrl(selectedSource || "all", year, "all", "all", 1);
     router.push(url);
   };
 
   const handleMonthChange = (month: string) => {
+    if (!month) return;
     setSelectedMonth(month);
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource, selectedYear, month, "all", 1);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", month, "all", 1);
     router.push(url);
   };
 
   const handleDayChange = (day: string) => {
+    if (!day) return;
     setSelectedDay(day);
     setCurrentPage(1);
-    const url = buildUrl(selectedSource, selectedYear, selectedMonth, day, 1);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", day, 1);
     router.push(url);
   };
 
@@ -215,10 +230,10 @@ export default function NewsApp({
 
     setCurrentPage(safePage);
     const url = buildUrl(
-      selectedSource,
-      selectedYear,
-      selectedMonth,
-      selectedDay,
+      selectedSource || "all",
+      selectedYear || "all",
+      selectedMonth || "all",
+      selectedDay || "all",
       safePage
     );
     router.push(url);
@@ -243,6 +258,7 @@ export default function NewsApp({
   };
 
   const handleIframeLoad = (articleId: string) => {
+    if (!articleId) return;
     setIframeLoadingStates(prev => ({
       ...prev,
       [articleId]: false
@@ -250,6 +266,7 @@ export default function NewsApp({
   };
 
   const handleIframeError = (articleId: string) => {
+    if (!articleId) return;
     setIframeLoadingStates(prev => ({
       ...prev,
       [articleId]: false
@@ -261,6 +278,7 @@ export default function NewsApp({
   };
 
   const handleIframeOpen = (articleId: string) => {
+    if (!articleId) return;
     setIframeLoadingStates(prev => ({
       ...prev,
       [articleId]: true
@@ -364,19 +382,30 @@ export default function NewsApp({
     setLoading(true);
     try {
       let url = `${API_BASE}/news?page=${safePage}&limit=30`;
-      if (selectedSource !== "all") url += `&source=${encodeURIComponent(selectedSource)}`;
-      if (selectedYear !== "all") url += `&year=${selectedYear}`;
-      if (selectedMonth !== "all") url += `&month=${selectedMonth}`;
-      if (selectedDay !== "all") url += `&day=${selectedDay}`;
-
-
+      if (selectedSource && selectedSource !== "all") url += `&source=${encodeURIComponent(selectedSource)}`;
+      if (selectedYear && selectedYear !== "all") url += `&year=${selectedYear}`;
+      if (selectedMonth && selectedMonth !== "all") url += `&month=${selectedMonth}`;
+      if (selectedDay && selectedDay !== "all") url += `&day=${selectedDay}`;
 
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setNews(data.news || []);
-      setPagination(data.pagination || {});
+      setPagination(data.pagination || {
+        current: 1,
+        total: 1,
+        count: 0
+      });
     } catch (error) {
       console.error("Error fetching news:", error);
+      setNews([]);
+      setPagination({
+        current: 1,
+        total: 1,
+        count: 0
+      });
     }
     setLoading(false);
   };
@@ -384,32 +413,43 @@ export default function NewsApp({
   const fetchSources = async () => {
     try {
       const response = await fetch(`${API_BASE}/sources`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setSources(data);
+      setSources(data || []);
     } catch (error) {
       console.error("❌ Error fetching sources:", error);
+      setSources([]);
     }
   };
 
   const fetchYears = async () => {
     try {
       const response = await fetch(`${API_BASE}/years`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setAvailableYears(data);
+      setAvailableYears(data || []);
     } catch (error) {
       console.error("Error fetching years:", error);
+      setAvailableYears([]);
     }
   };
 
   const fetchMonths = async (year: string) => {
-    if (year === "all") {
+    if (!year || year === "all") {
       setAvailableMonths([]);
       return;
     }
     try {
       const response = await fetch(`${API_BASE}/months/${year}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setAvailableMonths(data);
+      setAvailableMonths(data || []);
     } catch (error) {
       console.error("Error fetching months:", error);
       setAvailableMonths([]);
@@ -417,14 +457,17 @@ export default function NewsApp({
   };
 
   const fetchDays = async (year: string, month: string) => {
-    if (year === "all" || month === "all") {
+    if (!year || !month || year === "all" || month === "all") {
       setAvailableDays([]);
       return;
     }
     try {
       const response = await fetch(`${API_BASE}/days/${year}/${month}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setAvailableDays(data);
+      setAvailableDays(data || []);
     } catch (error) {
       console.error("Error fetching days:", error);
       setAvailableDays([]);
@@ -434,10 +477,24 @@ export default function NewsApp({
   const fetchStats = async () => {
     try {
       const response = await fetch(`${API_BASE}/stats`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setStats(data);
+      setStats(data || {
+        total_news: 0,
+        total_sources: 0,
+        total_days: 0,
+        last_update: ""
+      });
     } catch (error) {
       console.error("Error fetching stats:", error);
+      setStats({
+        total_news: 0,
+        total_sources: 0,
+        total_days: 0,
+        last_update: ""
+      });
     }
   };
 
@@ -445,26 +502,34 @@ export default function NewsApp({
 
   // Utility functions
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("tr-TR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Geçersiz tarih";
+      }
+      return date.toLocaleString("tr-TR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      return "Tarih hatası";
+    }
   };
 
   const getFilterSummary = () => {
     const filters = [];
-    if (selectedSource !== "all") filters.push(selectedSource);
-    if (selectedYear !== "all") {
+    if (selectedSource && selectedSource !== "all") filters.push(selectedSource);
+    if (selectedYear && selectedYear !== "all") {
       let dateFilter = selectedYear;
-      if (selectedMonth !== "all") {
+      if (selectedMonth && selectedMonth !== "all") {
         const monthName =
           availableMonths.find((m) => m.value === selectedMonth)?.name ||
           selectedMonth;
-        dateFilter += ` ${monthName}`;
-        if (selectedDay !== "all") {
+        dateFilter += ` ${monthName || selectedMonth}`;
+        if (selectedDay && selectedDay !== "all") {
           dateFilter += ` ${selectedDay}`;
         }
       }
@@ -476,14 +541,14 @@ export default function NewsApp({
 
   // Pagination component'ini tanımla (NewsApp component'inin içinde)
   const PaginationControls = () => {
-    if (pagination.total <= 1) return null;
+    if (!pagination || pagination.total <= 1) return null;
 
     return (
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
         <Button
           variant="outline"
-          disabled={currentPage === 1}
-          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={!currentPage || currentPage === 1}
+          onClick={() => handlePageChange((currentPage || 1) - 1)}
           size="sm"
           className="w-full sm:w-auto"
         >
@@ -493,16 +558,16 @@ export default function NewsApp({
 
         <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-gray-600">
           <span>
-            Sayfa {currentPage} / {pagination.total}
+            Sayfa {currentPage || 1} / {pagination.total || 1}
           </span>
           <span className="hidden sm:inline">•</span>
-          <span>({pagination.count} haber)</span>
+          <span>({pagination.count || 0} haber)</span>
         </div>
 
         <Button
           variant="outline"
-          disabled={currentPage === pagination.total}
-          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={!currentPage || !pagination.total || currentPage === pagination.total}
+          onClick={() => handlePageChange((currentPage || 1) + 1)}
           size="sm"
           className="w-full sm:w-auto"
         >
@@ -621,43 +686,39 @@ export default function NewsApp({
     // If there's an error, show a fallback
     if (adError) {
       const isConfigError = !process.env.NEXT_PUBLIC_ADSENSE_CLIENT || !process.env.NEXT_PUBLIC_ADSENSE_SLOT;
-      return (
-        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
+              return (
+          <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
             <div className="text-center p-4">
               <div className="text-gray-500 text-sm mb-2">
                 {isConfigError ? "AdSense yapılandırılmamış" : "Reklam yüklenemedi"}
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge className="bg-blue-600 text-white text-xs">
                 {isConfigError ? "Yapılandırma Hatası" : "Teknik Sorun"}
               </Badge>
             </div>
           </div>
-        </Card>
-      );
+        );
     }
 
     return (
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-        <div className="relative h-48 w-full bg-gray-100">
-          {/* AdSense container - ref ile kontrol ediliyor */}
-          <div
-            ref={adContainerRef}
-            className="w-full h-full"
-            style={{
-              backgroundColor: "#f5f5f5",
-              minHeight: "192px" // 48 * 4 = 192px (h-48)
-            }}
-          />
+      <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
+        {/* AdSense container - ref ile kontrol ediliyor */}
+        <div
+          ref={adContainerRef}
+          className="w-full h-full"
+          style={{
+            backgroundColor: "#f5f5f5",
+            minHeight: "128px" // 32 * 4 = 128px (h-32)
+          }}
+        />
 
-          {/* Production indicator */}
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-blue-600 text-white text-xs">
-              {adLoaded ? "REKLAM" : "YÜKLENİYOR..."}
-            </Badge>
-          </div>
+        {/* Production indicator */}
+        <div className="absolute top-2 right-2">
+          <Badge className="bg-blue-600 text-white text-xs">
+            {adLoaded ? "REKLAM" : "YÜKLENİYOR..."}
+          </Badge>
         </div>
-      </Card>
+      </div>
     );
   };
 
@@ -665,8 +726,20 @@ export default function NewsApp({
   const YandexAdCard = ({ onError }: { onError?: () => void }) => {
     const [adLoaded, setAdLoaded] = useState(false);
     const [adError, setAdError] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
+      // Mobil cihaz kontrolü
+      const checkMobile = () => {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        const isMobileViewport = window.innerWidth <= 768;
+        setIsMobile(isMobileDevice || isMobileViewport);
+      };
+
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+
       // Yandex RTB script'ini yükle
       const loadYandexScript = () => {
         if (typeof window === "undefined") return;
@@ -681,6 +754,7 @@ export default function NewsApp({
         const script = document.createElement('script');
         script.src = 'https://yandex.ru/ads/system/context.js';
         script.async = true;
+        script.defer = true; // Mobil için defer ekle
         script.onload = () => {
           // Initialize yaContextCb if it doesn't exist
           if (!(window as any).yaContextCb) {
@@ -689,7 +763,10 @@ export default function NewsApp({
 
           // Add our callback to the queue
           (window as any).yaContextCb.push(() => {
-            initializeYandexAd();
+            // Mobil için kısa gecikme ekle
+            setTimeout(() => {
+              initializeYandexAd();
+            }, isMobile ? 100 : 0);
           });
         };
         script.onerror = () => {
@@ -704,10 +781,21 @@ export default function NewsApp({
       const initializeYandexAd = () => {
         try {
           if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
-            (window as any).Ya.Context.AdvManager.render({
+            // Mobil cihazlarda farklı reklam boyutu kullan
+            const adConfig: any = {
               "blockId": "R-A-17002789-1",
               "renderTo": "yandex_rtb_R-A-17002789-1"
-            });
+            };
+
+            // Mobil cihazlarda ek mobil optimizasyonu
+            if (isMobile) {
+              adConfig["type"] = "banner";
+              adConfig["format"] = "auto";
+              adConfig["size"] = "320x50"; // Mobil için sabit boyut
+              adConfig["mobile"] = true; // Mobil flag'i ekle
+            }
+
+            (window as any).Ya.Context.AdvManager.render(adConfig);
             setAdLoaded(true);
           } else {
             console.warn("Yandex Context not available");
@@ -720,64 +808,93 @@ export default function NewsApp({
       };
 
       loadYandexScript();
-    }, [onError]);
+
+      return () => {
+        window.removeEventListener('resize', checkMobile);
+      };
+    }, [onError, isMobile]);
 
     // If there's an error, show a fallback
     if (adError) {
       return (
-        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
-            <div className="text-center p-4">
-              <div className="text-gray-500 text-sm mb-2">
-                Yandex reklam yüklenemedi
-              </div>
-              <div className="text-gray-400 text-xs mb-2">
-                Reklam geçici olarak kullanılamıyor
-              </div>
-              <Badge variant="outline" className="text-xs">
-                Teknik Sorun
-              </Badge>
+        <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
+          <div className="text-center p-4">
+            <div className="text-gray-500 text-sm mb-2">
+              Yandex reklam yüklenemedi
             </div>
+            <div className="text-gray-400 text-xs mb-2">
+              Reklam geçici olarak kullanılamıyor
+            </div>
+            <Badge className="bg-red-600 text-white text-xs">
+              Teknik Sorun
+            </Badge>
           </div>
-        </Card>
+        </div>
       );
     }
 
     return (
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-        <div className="relative h-48 w-full bg-gray-100">
-          {/* Yandex RTB container */}
-          <div
-            id="yandex_rtb_R-A-17002789-1"
-            className="w-full h-full"
-            style={{
-              backgroundColor: "#f5f5f5",
-              minHeight: "192px" // 48 * 4 = 192px (h-48)
-            }}
-          />
+      <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
+        {/* Yandex RTB container */}
+        <div
+          id="yandex_rtb_R-A-17002789-1"
+          className="w-full h-full"
+          style={{
+            backgroundColor: "#f5f5f5",
+            minHeight: "128px", // 32 * 4 = 128px (h-32)
+            display: "flex",
+            alignItems: "flex-start" // Üstten başla, ortalama yapma
+          }}
+        />
 
-          {/* Yandex indicator */}
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-red-600 text-white text-xs">
-              {adLoaded ? "YANDEX" : "YÜKLENİYOR..."}
-            </Badge>
-          </div>
+        {/* Yandex indicator */}
+        <div className="absolute top-2 right-2">
+          <Badge className="bg-red-600 text-white text-xs">
+            {adLoaded ? "YANDEX" : "YÜKLENİYOR..."}
+          </Badge>
         </div>
-      </Card>
+      </div>
     );
   };
 
   // Reklam gösterim mantığı
   const shouldShowAd = (index: number) => {
-    // İlk 4 haberden sonra (index === 4) Google reklamı göster
-    // Sonra 4 haber daha geçip (index === 8) Yandex reklamını göster
-    return index === 4 || index === 8;
+    // Sayfada 2 reklam göster: Yandex ve Google
+    // Random pozisyonlarda ama önce Yandex sonra Google sırasında
+    const totalNews = news.length;
+    if (totalNews === 0) return false;
+    
+    // Random pozisyonlar için seed kullan (sayfa yenilendiğinde farklı olur)
+    const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
+    const random1 = (seed * 9301 + 49297) % totalNews;
+    const random2 = (seed * 49297 + 9301) % totalNews;
+    
+    // İlk reklam (Yandex) - random pozisyon
+    const firstAdPosition = random1;
+    // İkinci reklam (Google) - farklı random pozisyon
+    const secondAdPosition = random2 !== firstAdPosition ? random2 : (random2 + 1) % totalNews;
+    
+    return index === firstAdPosition || index === secondAdPosition;
   };
 
   // Hangi reklam türünü göstereceğini belirle
   const getAdType = (index: number) => {
-    if (index === 4) return "google"; // İlk 4 haberden sonra
-    if (index === 8) return "yandex"; // Sonra 4 haber daha geçip
+    // Sayfada 2 reklam göster: Yandex ve Google
+    const totalNews = news.length;
+    if (totalNews === 0) return null;
+    
+    // Random pozisyonlar için seed kullan (sayfa yenilendiğinde farklı olur)
+    const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
+    const random1 = (seed * 9301 + 49297) % totalNews;
+    const random2 = (seed * 49297 + 9301) % totalNews;
+    
+    // İlk reklam (Yandex) - random pozisyon
+    const firstAdPosition = random1;
+    // İkinci reklam (Google) - farklı random pozisyon
+    const secondAdPosition = random2 !== firstAdPosition ? random2 : (random2 + 1) % totalNews;
+    
+    if (index === firstAdPosition) return "yandex";
+    if (index === secondAdPosition) return "google";
     return null;
   };
 
@@ -785,12 +902,33 @@ export default function NewsApp({
   const AdCard = ({ adType }: { adType: string }) => {
     const [isProduction, setIsProduction] = useState(false);
     const [yandexFailed, setYandexFailed] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
       // Environment kontrolü
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
       setIsProduction(env === "production");
+
+      // Mobil cihaz kontrolü
+      const checkMobile = () => {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        const isMobileViewport = window.innerWidth <= 768;
+        setIsMobile(isMobileDevice || isMobileViewport);
+      };
+
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+
+      return () => {
+        window.removeEventListener('resize', checkMobile);
+      };
     }, []);
+
+    // Safety check for adType
+    if (!adType || typeof adType !== "string") {
+      return null;
+    }
 
     // Production mode'da reklam türüne göre göster
     if (isProduction) {
@@ -819,12 +957,20 @@ export default function NewsApp({
 
   useEffect(() => {
     // Ay listesini güncelle
-    fetchMonths(selectedYear);
+    if (selectedYear && selectedYear !== "all") {
+      fetchMonths(selectedYear);
+    } else {
+      setAvailableMonths([]);
+    }
   }, [selectedYear]);
 
   useEffect(() => {
     // Gün listesini güncelle
-    fetchDays(selectedYear, selectedMonth);
+    if (selectedYear && selectedYear !== "all" && selectedMonth && selectedMonth !== "all") {
+      fetchDays(selectedYear, selectedMonth);
+    } else {
+      setAvailableDays([]);
+    }
   }, [selectedYear, selectedMonth]);
 
   // Basit çözüm - her props değişiminde haberleri çek
@@ -847,7 +993,7 @@ export default function NewsApp({
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage]);
 
   // Loading state
-  if (loading && news.length === 0) {
+  if (loading && (!news || news.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -890,7 +1036,7 @@ export default function NewsApp({
                 <span className="hidden sm:inline">Güncelle</span>
               </Button>
 
-              {stats.total_news && (
+              {stats && stats.total_news && stats.total_news > 0 && (
                 <Badge
                   variant="secondary"
                   className="text-xs md:text-sm hidden sm:flex"
@@ -911,7 +1057,7 @@ export default function NewsApp({
               <Filter className="h-5 w-5 text-gray-500" />
               <h2 className="text-lg font-semibold text-gray-900">Filtreler</h2>
             </div>
-            {getFilterSummary() && (
+            {getFilterSummary() && getFilterSummary().trim() !== "" && (
               <Badge variant="outline" className="text-sm">
                 <Archive className="h-3 w-3 mr-1" />
                 {getFilterSummary()}
@@ -928,7 +1074,7 @@ export default function NewsApp({
             >
               <span className="flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
-                Filtreler {getFilterSummary() && `(${getFilterSummary()})`}
+                Filtreler {getFilterSummary() && getFilterSummary().trim() !== "" && `(${getFilterSummary()})`}
               </span>
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${mobileFiltersOpen ? "rotate-180" : ""
@@ -946,10 +1092,10 @@ export default function NewsApp({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Haber Kaynağı
               </label>
-              <Select value={selectedSource} onValueChange={handleSourceChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Kaynak seçin" />
-                </SelectTrigger>
+                              <Select value={selectedSource || "all"} onValueChange={handleSourceChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Kaynak seçin" />
+                  </SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
                     <input
@@ -961,14 +1107,15 @@ export default function NewsApp({
                     />
                   </div>
                   <SelectItem value="all">Tümü</SelectItem>
-                  {sources.length === 0 ? (
+                  {!sources || sources.length === 0 ? (
                     <SelectItem value="loading" disabled>
-                      Kaynaklar yükleniyor... ({sources.length})
+                      Kaynaklar yükleniyor... ({sources ? sources.length : 0})
                     </SelectItem>
                   ) : (
                     sources
                       .filter(source => {
                         // Hem tam eşleşme hem de slug eşleşmesi kontrol et
+                        if (!source) return false;
                         const sourceLower = source.toLowerCase();
                         const searchLower = sourceSearch.toLowerCase();
 
@@ -998,16 +1145,16 @@ export default function NewsApp({
               <div className="flex space-x-2">
                 {/* Year Filter */}
                 <Select
-                  value={selectedYear}
+                  value={selectedYear || "all"}
                   onValueChange={handleYearChange}
-                  disabled={sources.length === 0}
+                  disabled={!sources || sources.length === 0}
                 >
                   <SelectTrigger className="w-20 text-sm">
                     <SelectValue placeholder="Yıl" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tümü</SelectItem>
-                    {availableYears.map((year) => (
+                    {availableYears && availableYears.length > 0 && availableYears.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
                       </SelectItem>
@@ -1017,16 +1164,16 @@ export default function NewsApp({
 
                 {/* Month Filter */}
                 <Select
-                  value={selectedMonth}
+                  value={selectedMonth || "all"}
                   onValueChange={handleMonthChange}
-                  disabled={selectedYear === "all"}
+                  disabled={!selectedYear || selectedYear === "all"}
                 >
                   <SelectTrigger className="w-32 text-sm">
                     <SelectValue placeholder="Ay" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tümü</SelectItem>
-                    {availableMonths.map((month) => (
+                    {availableMonths && availableMonths.length > 0 && availableMonths.map((month) => (
                       <SelectItem key={month.value} value={month.value}>
                         {month.name}
                       </SelectItem>
@@ -1034,24 +1181,24 @@ export default function NewsApp({
                   </SelectContent>
                 </Select>
 
-                {/* Day Filter */}
-                <Select
-                  value={selectedDay}
-                  onValueChange={handleDayChange}
-                  disabled={selectedYear === "all" || selectedMonth === "all"}
-                >
-                  <SelectTrigger className="w-20 text-sm">
-                    <SelectValue placeholder="Gün" />
+                                  {/* Day Filter */}
+                  <Select
+                    value={selectedDay || "all"}
+                    onValueChange={handleDayChange}
+                    disabled={!selectedYear || !selectedMonth || selectedYear === "all" || selectedMonth === "all"}
+                  >
+                    <SelectTrigger className="w-20 text-sm">
+                      <SelectValue placeholder="Gün" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tümü</SelectItem>
-                    {availableDays.map((day) => (
-                      <SelectItem key={day} value={day}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      {availableDays && availableDays.length > 0 && availableDays.map((day) => (
+                        <SelectItem key={day} value={day}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
                 {/* Clear Button */}
                 <Button
@@ -1115,15 +1262,15 @@ export default function NewsApp({
           </div>
         </div>
 
-        {/* News Results Summary */}
+                {/* News Results Summary */}
         {!loading && (
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-sm text-gray-600">
-                {pagination.count > 0 ? (
+                {pagination && pagination.count > 0 ? (
                   <>
                     <strong>{pagination.count}</strong> haber bulundu
-                    {getFilterSummary() && (
+                    {getFilterSummary() && getFilterSummary().trim() !== "" && (
                       <span>
                         {" "}
                         • Filtre: <strong>{getFilterSummary()}</strong>
@@ -1135,10 +1282,10 @@ export default function NewsApp({
                 )}
               </div>
 
-              {pagination.count > 0 && (
+              {pagination && pagination.count > 0 && pagination.total > 0 && (
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <div className="text-sm text-gray-500">
-                    Sayfa {currentPage} / {pagination.total}
+                    Sayfa {currentPage || 1} / {pagination.total || 1}
                   </div>
 
                   {/* ÜST PAGİNATİON - kompakt versiyon */}
@@ -1146,8 +1293,8 @@ export default function NewsApp({
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={!currentPage || currentPage === 1}
+                        onClick={() => handlePageChange((currentPage || 1) - 1)}
                         size="sm"
                         className="h-8 px-2"
                       >
@@ -1156,8 +1303,8 @@ export default function NewsApp({
 
                       <Button
                         variant="outline"
-                        disabled={currentPage === pagination.total}
-                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={!currentPage || !pagination.total || currentPage === pagination.total}
+                        onClick={() => handlePageChange((currentPage || 1) + 1)}
                         size="sm"
                         className="h-8 px-2"
                       >
@@ -1172,7 +1319,7 @@ export default function NewsApp({
         )}
 
         {/* News Grid */}
-        {news.length === 0 ? (
+        {!news || news.length === 0 ? (
           <div className="text-center py-12">
             <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-xl text-gray-600">
@@ -1186,8 +1333,13 @@ export default function NewsApp({
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
-              {news
-                .map((article, index) => {
+              {news && news.length > 0 && news
+                                .map((article, index) => {
+                  // Safety check for article object
+                  if (!article || !article.id) {
+                    return null;
+                  }
+                  
                   const items = [];
 
                   // Add the news card
@@ -1197,12 +1349,12 @@ export default function NewsApp({
                       className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden"
                     >
                       {/* Image Section - Sadece resim varsa göster */}
-                      {article.image && (
+                      {article.image && article.image.trim() !== "" && (
                         <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
-                          {article.image && (
+                          {article.image && article.image.trim() !== "" && (
                             <img
-                              src={article.image}
-                              alt={article.title}
+                              src={article.image || ""}
+                              alt={article.title || "Haber görseli"}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 // Hide image on error
@@ -1216,58 +1368,56 @@ export default function NewsApp({
                           <div className="absolute top-2 left-2">
                             <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
                               <span className="block sm:hidden">
-                                {article.source.split(" ")[0]}
+                                {(article.source || "Kaynak").split(" ")[0]}
                               </span>
                               <span className="hidden sm:block">
-                                {article.source}
+                                {article.source || "Kaynak"}
                               </span>
                             </Badge>
-                          </div>
+                            </div>
 
                           {/* Date overlay */}
                           <div className="absolute top-2 right-2">
                             <div className="flex items-center text-xs text-white bg-black/60 backdrop-blur-sm px-2 py-1 rounded">
                               <Clock className="h-3 w-3 mr-1" />
-                              {new Date(article.pubDate).toLocaleDateString(
-                                "tr-TR"
-                              )}
+                              {article.pubDate ? new Date(article.pubDate).toLocaleDateString("tr-TR") : "Tarih yok"}
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* Source badge ve Date - Resim yoksa üstte göster */}
-                      {!article.image && (
+                      {(!article.image || article.image.trim() === "") && (
                         <div className="relative pt-2 px-3 md:px-6 flex items-center justify-between">
                           <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
                             <span className="block sm:hidden">
-                              {article.source.split(" ")[0]}
+                              {(article.source || "Kaynak").split(" ")[0]}
                             </span>
                             <span className="hidden sm:block">
-                              {article.source}
+                              {article.source || "Kaynak"}
                             </span>
                           </Badge>
 
                           <div className="flex items-center text-xs text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
-                            {new Date(article.pubDate).toLocaleDateString("tr-TR")}
+                            {article.pubDate ? new Date(article.pubDate).toLocaleDateString("tr-TR") : "Tarih yok"}
                           </div>
                         </div>
                       )}
 
                       <CardHeader className="pb-2 px-3 md:px-6">
                         <CardTitle className="text-sm md:text-lg leading-tight line-clamp-2 md:line-clamp-3">
-                          {article.title}
+                          {article.title || "Başlık bulunamadı"}
                         </CardTitle>
                       </CardHeader>
 
                       <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
-                        <CardDescription className="flex-1 text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
-                          {article.description}
+                        <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
+                          {article.description || "Açıklama bulunamadı"}
                         </CardDescription>
 
                         <Dialog onOpenChange={(open) => {
-                          if (open) {
+                          if (open && article.id) {
                             handleIframeOpen(article.id);
                           }
                         }}>
@@ -1280,19 +1430,19 @@ export default function NewsApp({
                               Detaylı Oku
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vw] max-h-[95vh] overflow-hidden p-0">
+                          <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vh] overflow-hidden p-0">
                             <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
                                 <Badge variant="outline" className="text-xs sm:text-sm w-fit">
-                                  {article.source}
+                                  {article.source || "Kaynak"}
                                 </Badge>
                                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
                                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                  {formatDate(article.pubDate)}
+                                  {article.pubDate ? formatDate(article.pubDate) : "Tarih yok"}
                                 </div>
                               </div>
                               <DialogTitle className="text-lg sm:text-xl leading-tight">
-                                {article.title}
+                                {article.title || "Başlık bulunamadı"}
                               </DialogTitle>
                             </DialogHeader>
 
@@ -1303,7 +1453,7 @@ export default function NewsApp({
                                 </p>
                                 <Button asChild size="sm" variant="outline">
                                   <a
-                                    href={article.link}
+                                    href={article.link || "#"}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center"
@@ -1316,7 +1466,7 @@ export default function NewsApp({
 
                               {/* Iframe ile haber kaynağını göster */}
                               <div className="relative w-full h-[70vh] sm:h-[75vh] lg:h-[80vh] xl:h-[85vh] border rounded-lg overflow-hidden">
-                                {iframeErrorStates[article.id] ? (
+                                {article.id && iframeErrorStates[article.id] === true ? (
                                   /* Error fallback */
                                   <div className="w-full h-full bg-gray-50 flex items-center justify-center">
                                     <div className="text-center p-4 sm:p-6">
@@ -1330,7 +1480,7 @@ export default function NewsApp({
                                       </p>
                                       <Button asChild>
                                         <a
-                                          href={article.link}
+                                          href={article.link || "#"}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="flex items-center"
@@ -1345,22 +1495,22 @@ export default function NewsApp({
                                   /* Iframe content */
                                   <>
                                     <iframe
-                                      src={article.link}
-                                      title={`${article.title} - ${article.source}`}
+                                      src={article.link || "#"}
+                                      title={`${article.title || "Haber"} - ${article.source || "Kaynak"}`}
                                       className="w-full h-full"
                                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
                                       loading="lazy"
-                                      onLoad={() => handleIframeLoad(article.id)}
-                                      onError={() => handleIframeError(article.id)}
+                                      onLoad={() => article.id && handleIframeLoad(article.id)}
+                                      onError={() => article.id && handleIframeError(article.id)}
                                       referrerPolicy="no-referrer"
                                     />
 
                                     {/* Loading overlay */}
-                                    {iframeLoadingStates[article.id] && (
+                                    {article.id && iframeLoadingStates[article.id] === true && (
                                       <div className="absolute inset-0 bg-white flex items-center justify-center">
                                         <div className="text-center">
                                           <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                                          <p className="text-xs sm:text-sm text-gray-600">Haber kaynağı yükleniyor...</p>
+                                          <div className="text-xs sm:text-sm text-gray-600">Haber kaynağı yükleniyor...</div>
                                         </div>
                                       </div>
                                     )}
@@ -1377,17 +1527,24 @@ export default function NewsApp({
                   // Add ad card after specific news items
                   if (shouldShowAd(index)) {
                     const adType = getAdType(index);
-                    if (adType) { // Type guard to ensure adType is not null
+                    if (adType && adType.trim() !== "") {
                       items.push(
-                        <AdCard key={`ad-${index}-${adType}`} adType={adType} />
+                        <Card key={`ad-${index}-${adType}`} className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+                          <div className="h-full">
+                            <AdCard adType={adType} />
+                          </div>
+                        </Card>
                       );
                     }
                   }
 
                   return items;
                 })
+                .filter(Boolean)
                 .flat()}
             </div>
+
+
 
             {/* ALT PAGINATION */}
             <PaginationControls />
