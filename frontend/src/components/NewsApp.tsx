@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -100,7 +100,7 @@ export default function NewsApp({
   const [sourceSearch, setSourceSearch] = useState<string>("");
   const [iframeLoadingStates, setIframeLoadingStates] = useState<{ [key: string]: boolean }>({});
   const [iframeErrorStates, setIframeErrorStates] = useState<{ [key: string]: boolean }>({});
-  
+
 
 
   // Hierarchical date filters
@@ -160,14 +160,14 @@ export default function NewsApp({
       'ş': 's', 'Ş': 'S',
       'ü': 'u', 'Ü': 'U'
     };
-    
+
     let slug = text;
-    
+
     // Türkçe karakterleri değiştir
     Object.keys(turkishCharMap).forEach(char => {
       slug = slug.replace(new RegExp(char, 'g'), turkishCharMap[char]);
     });
-    
+
     // Küçük harfe çevir ve URL-friendly yap
     return slug
       .toLowerCase()
@@ -182,7 +182,6 @@ export default function NewsApp({
     setSourceSearch(""); // Search'i temizle
     // Yeni source değerini kullan, diğerleri mevcut state'ten al
     const url = buildUrl(source, selectedYear, selectedMonth, selectedDay, 1);
-    console.log("🔍 handleSourceChange - Building URL with:", { source, selectedYear, selectedMonth, selectedDay });
     router.push(url);
   };
 
@@ -213,7 +212,7 @@ export default function NewsApp({
   const handlePageChange = (page: number) => {
     // NaN kontrolü
     const safePage = isNaN(page) || page < 1 ? 1 : page;
-    
+
     setCurrentPage(safePage);
     const url = buildUrl(
       selectedSource,
@@ -361,7 +360,7 @@ export default function NewsApp({
   const fetchNews = async (page = 1) => {
     // NaN kontrolü - page NaN ise 1 kullan
     const safePage = isNaN(page) || page < 1 ? 1 : page;
-    
+
     setLoading(true);
     try {
       let url = `${API_BASE}/news?page=${safePage}&limit=30`;
@@ -370,14 +369,7 @@ export default function NewsApp({
       if (selectedMonth !== "all") url += `&month=${selectedMonth}`;
       if (selectedDay !== "all") url += `&day=${selectedDay}`;
 
-      console.log("🔍 Fetching news with URL:", url);
-      console.log("🔍 Current filters:", { selectedSource, selectedYear, selectedMonth, selectedDay, page: safePage });
-      console.log("🔍 State values:", { 
-        selectedSource: typeof selectedSource, 
-        selectedYear: typeof selectedYear, 
-        selectedMonth: typeof selectedMonth, 
-        selectedDay: typeof selectedDay 
-      });
+
 
       const response = await fetch(url);
       const data = await response.json();
@@ -525,6 +517,7 @@ export default function NewsApp({
   const ProductionAdCard = () => {
     const [adLoaded, setAdLoaded] = useState(false);
     const [adError, setAdError] = useState(false);
+    const adContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       // Check if AdSense is properly configured
@@ -541,44 +534,87 @@ export default function NewsApp({
       }
 
       let timeoutId: NodeJS.Timeout;
+      let retryCount = 0;
+      const maxRetries = 5;
 
       const initializeAd = () => {
         try {
+          // DOM container'ın hazır olduğundan emin ol
+          if (!adContainerRef.current) {
+            console.warn("Ad container not ready, retrying...");
+            if (retryCount < maxRetries) {
+              retryCount++;
+              timeoutId = setTimeout(initializeAd, 1000);
+            } else {
+              setAdError(true);
+            }
+            return;
+          }
+
           // Wait for AdSense to be available
           if (typeof window !== "undefined" && (window as any).adsbygoogle) {
             try {
-              // Push the ad with proper error handling
-              ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-              setAdLoaded(true);
-            } catch (pushError) {
-              console.error("AdSense push error:", pushError);
-              setAdError(true);
-            }
-          } else {
-            // If AdSense is not ready, wait a bit and try again
-            timeoutId = setTimeout(() => {
-              if (typeof window !== "undefined" && (window as any).adsbygoogle) {
-                initializeAd();
+              // Container'ı temizle ve yeniden oluştur
+              if (adContainerRef.current) {
+                adContainerRef.current.innerHTML = `
+                  <ins class="adsbygoogle"
+                       style="display:block"
+                       data-ad-client="${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}"
+                       data-ad-slot="${process.env.NEXT_PUBLIC_ADSENSE_SLOT}"
+                       data-ad-format="auto"
+                       data-full-width-responsive="true"></ins>
+                `;
+
+                // Push the ad with proper error handling
+                ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+                setAdLoaded(true);
+              }
+            } catch (err) {
+              console.error("AdSense push error:", err);
+              if (retryCount < maxRetries) {
+                retryCount++;
+                timeoutId = setTimeout(initializeAd, 2000);
               } else {
-                console.warn("AdSense not available after timeout");
                 setAdError(true);
               }
-            }, 2000); // 2 second timeout
+            }
+          } else {
+            console.warn("AdSense not available, retrying...");
+            if (retryCount < maxRetries) {
+              retryCount++;
+              timeoutId = setTimeout(initializeAd, 1000);
+            } else {
+              setAdError(true);
+            }
           }
         } catch (err) {
           console.error("Ad initialization error:", err);
-          setAdError(true);
+          if (retryCount < maxRetries) {
+            retryCount++;
+            timeoutId = setTimeout(initializeAd, 2000);
+          } else {
+            setAdError(true);
+          }
         }
       };
 
-      // Start initialization process
-      initializeAd();
+      // DOM hazır olduktan sonra başlat
+      const startInitialization = () => {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initializeAd);
+        } else {
+          initializeAd();
+        }
+      };
+
+      startInitialization();
 
       // Cleanup function
       return () => {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
+        document.removeEventListener('DOMContentLoaded', initializeAd);
       };
     }, []);
 
@@ -604,18 +640,14 @@ export default function NewsApp({
     return (
       <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
         <div className="relative h-48 w-full bg-gray-100">
-          <ins
-            className="adsbygoogle"
+          {/* AdSense container - ref ile kontrol ediliyor */}
+          <div
+            ref={adContainerRef}
+            className="w-full h-full"
             style={{
-              display: "block",
-              width: "100%",
-              height: "100%",
               backgroundColor: "#f5f5f5",
+              minHeight: "192px" // 48 * 4 = 192px (h-48)
             }}
-            data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT}
-            data-ad-slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
           />
 
           {/* Production indicator */}
@@ -630,124 +662,99 @@ export default function NewsApp({
   };
 
   // Yandex reklam component'i
-  const YandexAdCard = () => {
+  const YandexAdCard = ({ onError }: { onError?: () => void }) => {
     const [adLoaded, setAdLoaded] = useState(false);
     const [adError, setAdError] = useState(false);
 
     useEffect(() => {
-             // Yandex RTB script'ini yükle
-       const loadYandexScript = () => {
-         if (typeof window === "undefined") return;
+      // Yandex RTB script'ini yükle
+      const loadYandexScript = () => {
+        if (typeof window === "undefined") return;
 
-         // Check if Yandex script is already loaded
-         if ((window as any).Ya && (window as any).Ya.Context) {
-           initializeYandexAd();
-           return;
-         }
+        // Check if Yandex script is already loaded
+        if ((window as any).Ya && (window as any).Ya.Context) {
+          initializeYandexAd();
+          return;
+        }
 
-         // Check if script is already being loaded
-         if (document.querySelector('script[src*="yandex.ru/ads/system/context.js"]')) {
-           // Script is loading, wait for it
-           setTimeout(() => {
-             if ((window as any).Ya && (window as any).Ya.Context) {
-               initializeYandexAd();
-             } else {
-               setAdError(true);
-             }
-           }, 1000);
-           return;
-         }
+        // Load Yandex RTB script
+        const script = document.createElement('script');
+        script.src = 'https://yandex.ru/ads/system/context.js';
+        script.async = true;
+        script.onload = () => {
+          // Initialize yaContextCb if it doesn't exist
+          if (!(window as any).yaContextCb) {
+            (window as any).yaContextCb = [];
+          }
 
-         // Load Yandex RTB script
-         const script = document.createElement('script');
-         script.src = 'https://yandex.ru/ads/system/context.js';
-         script.async = true;
-         script.onload = () => {
-           // Initialize yaContextCb if it doesn't exist
-           if (!(window as any).yaContextCb) {
-             (window as any).yaContextCb = [];
-           }
-           
-           // Add our callback to the queue
-           (window as any).yaContextCb.push(() => {
-             initializeYandexAd();
-           });
-         };
-         script.onerror = () => {
-           console.error("Yandex RTB script yüklenemedi");
-           setAdError(true);
-         };
+          // Add our callback to the queue
+          (window as any).yaContextCb.push(() => {
+            initializeYandexAd();
+          });
+        };
+        script.onerror = () => {
+          console.error("Yandex RTB script yüklenemedi");
+          setAdError(true);
+          onError?.();
+        };
 
-         document.head.appendChild(script);
-       };
+        document.head.appendChild(script);
+      };
 
-                           const initializeYandexAd = () => {
-          try {
-            if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
-              (window as any).Ya.Context.AdvManager.render({
-                "blockId": "R-A-17002789-1",
-                "renderTo": "yandex_rtb_R-A-17002789-1"
-              });
-              setAdLoaded(true);
-            } else {
-              console.warn("Yandex Context not available");
-              setAdError(true);
-            }
-          } catch (err) {
-            console.error("Yandex ad initialization error:", err);
+      const initializeYandexAd = () => {
+        try {
+          if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
+            (window as any).Ya.Context.AdvManager.render({
+              "blockId": "R-A-17002789-1",
+              "renderTo": "yandex_rtb_R-A-17002789-1"
+            });
+            setAdLoaded(true);
+          } else {
+            console.warn("Yandex Context not available");
             setAdError(true);
           }
-        };
+        } catch (err) {
+          console.error("Yandex ad initialization error:", err);
+          setAdError(true);
+        }
+      };
 
-       // Timeout ile reklam yükleme kontrolü
-       const timeoutId = setTimeout(() => {
-         if (!adLoaded && !adError) {
-           console.warn("Yandex ad loading timeout");
-           setAdError(true);
-         }
-       }, 10000); // 10 saniye timeout
+      loadYandexScript();
+    }, [onError]);
 
-               loadYandexScript();
-
-                // Cleanup function
-        return () => {
-          clearTimeout(timeoutId);
-        };
-    }, []);
-
-         // If there's an error, show a fallback
-     if (adError) {
-       return (
-         <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-           <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
-             <div className="text-center p-4">
-               <div className="text-gray-500 text-sm mb-2">
-                 Yandex reklam yüklenemedi
-               </div>
-               <div className="text-gray-400 text-xs mb-2">
-                 Reklam geçici olarak kullanılamıyor
-               </div>
-               <Badge variant="outline" className="text-xs">
-                 Teknik Sorun
-               </Badge>
-             </div>
-           </div>
-         </Card>
-       );
-     }
+    // If there's an error, show a fallback
+    if (adError) {
+      return (
+        <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
+          <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center">
+            <div className="text-center p-4">
+              <div className="text-gray-500 text-sm mb-2">
+                Yandex reklam yüklenemedi
+              </div>
+              <div className="text-gray-400 text-xs mb-2">
+                Reklam geçici olarak kullanılamıyor
+              </div>
+              <Badge variant="outline" className="text-xs">
+                Teknik Sorun
+              </Badge>
+            </div>
+          </div>
+        </Card>
+      );
+    }
 
     return (
       <Card className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
         <div className="relative h-48 w-full bg-gray-100">
-                                           {/* Yandex RTB container */}
-            <div 
-              id="yandex_rtb_R-A-17002789-1"
-              className="w-full h-full"
-              style={{
-                backgroundColor: "#f5f5f5",
-                minHeight: "192px" // 48 * 4 = 192px (h-48)
-              }}
-            />
+          {/* Yandex RTB container */}
+          <div
+            id="yandex_rtb_R-A-17002789-1"
+            className="w-full h-full"
+            style={{
+              backgroundColor: "#f5f5f5",
+              minHeight: "192px" // 48 * 4 = 192px (h-48)
+            }}
+          />
 
           {/* Yandex indicator */}
           <div className="absolute top-2 right-2">
@@ -775,24 +782,29 @@ export default function NewsApp({
   };
 
   // Ana reklam component'i (environment'a göre production seçer)
-  const AdCard = ({ position, adType }: { position: number; adType: string }) => {
+  const AdCard = ({ adType }: { adType: string }) => {
     const [isProduction, setIsProduction] = useState(false);
+    const [yandexFailed, setYandexFailed] = useState(false);
 
     useEffect(() => {
       // Environment kontrolü
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
       setIsProduction(env === "production");
     }, []);
-    
+
     // Production mode'da reklam türüne göre göster
     if (isProduction) {
       if (adType === "google") {
         return <ProductionAdCard />;
       } else if (adType === "yandex") {
-        return <YandexAdCard />;
+        // Yandex başarısız olursa Google AdSense'e geç
+        if (yandexFailed) {
+          return <ProductionAdCard />;
+        }
+        return <YandexAdCard onError={() => setYandexFailed(true)} />;
       }
     }
-    
+
     // Development mode'da reklam gösterme
     return null;
   };
@@ -817,22 +829,12 @@ export default function NewsApp({
 
   // Basit çözüm - her props değişiminde haberleri çek
   useEffect(() => {
-    console.log("🔍 Props changed, updating state and fetching news:", {
-      initialSource,
-      initialYear,
-      initialMonth,
-      initialDay,
-      initialPage,
-    });
-
     // NaN kontrolü ve default değerler
     const safePage = isNaN(initialPage) || initialPage < 1 ? 1 : initialPage;
     const safeSource = initialSource || "all";
     const safeYear = initialYear || "all";
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
-
-    console.log("🔍 Safe values:", { safeSource, safeYear, safeMonth, safeDay, safePage });
 
     setSelectedSource(safeSource);
     setSelectedYear(safeYear);
@@ -841,7 +843,6 @@ export default function NewsApp({
     setCurrentPage(safePage);
 
     // Direkt fetch et - timeout yok
-    console.log("🔍 Fetching news immediately");
     fetchNews(safePage);
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage]);
 
@@ -866,8 +867,12 @@ export default function NewsApp({
             <div className="flex items-center space-x-2 md:space-x-4">
               <Newspaper className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
               <h1 className="text-lg md:text-2xl font-bold text-gray-900">
-                <span className="block md:hidden">Haberler</span>
-                <span className="hidden md:block">Haber Merkezi</span>
+                <span className="block md:hidden cursor-pointer hover:text-blue-600 transition-colors" onClick={() => router.push('/')}>
+                  Haber Merkezi
+                </span>
+                <span className="hidden md:block cursor-pointer hover:text-blue-600 transition-colors" onClick={() => router.push('/')}>
+                  Haber Merkezi
+                </span>
               </h1>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
@@ -884,7 +889,7 @@ export default function NewsApp({
                 )}
                 <span className="hidden sm:inline">Güncelle</span>
               </Button>
-              
+
               {stats.total_news && (
                 <Badge
                   variant="secondary"
@@ -966,10 +971,10 @@ export default function NewsApp({
                         // Hem tam eşleşme hem de slug eşleşmesi kontrol et
                         const sourceLower = source.toLowerCase();
                         const searchLower = sourceSearch.toLowerCase();
-                        
+
                         // Tam eşleşme kontrolü
                         if (sourceLower.includes(searchLower)) return true;
-                        
+
                         // Slug eşleşmesi kontrolü
                         const sourceSlug = createTurkishSlug(source);
                         const searchSlug = createTurkishSlug(sourceSearch);
@@ -1194,39 +1199,40 @@ export default function NewsApp({
                       {/* Image Section - Sadece resim varsa göster */}
                       {article.image && (
                         <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
-                        {article.image && (
-                          <img
-                            src={article.image}
-                            alt={article.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                            }}
-                          />
-                        )}
+                          {article.image && (
+                            <img
+                              src={article.image}
+                              alt={article.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Hide image on error
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          )}
 
-                        {/* Source badge overlay */}
-                        <div className="absolute top-2 left-2">
-                          <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
-                            <span className="block sm:hidden">
-                              {article.source.split(" ")[0]}
-                            </span>
-                            <span className="hidden sm:block">
-                              {article.source}
-                            </span>
-                          </Badge>
-                        </div>
-
-                        {/* Date overlay */}
-                        <div className="absolute top-2 right-2">
-                          <div className="flex items-center text-xs text-white bg-black/60 backdrop-blur-sm px-2 py-1 rounded">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {new Date(article.pubDate).toLocaleDateString(
-                              "tr-TR"
-                            )}
+                          {/* Source badge overlay */}
+                          <div className="absolute top-2 left-2">
+                            <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
+                              <span className="block sm:hidden">
+                                {article.source.split(" ")[0]}
+                              </span>
+                              <span className="hidden sm:block">
+                                {article.source}
+                              </span>
+                            </Badge>
                           </div>
-                        </div>
+
+                          {/* Date overlay */}
+                          <div className="absolute top-2 right-2">
+                            <div className="flex items-center text-xs text-white bg-black/60 backdrop-blur-sm px-2 py-1 rounded">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {new Date(article.pubDate).toLocaleDateString(
+                                "tr-TR"
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -1241,7 +1247,7 @@ export default function NewsApp({
                               {article.source}
                             </span>
                           </Badge>
-                          
+
                           <div className="flex items-center text-xs text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
                             {new Date(article.pubDate).toLocaleDateString("tr-TR")}
@@ -1274,28 +1280,28 @@ export default function NewsApp({
                               Detaylı Oku
                             </Button>
                           </DialogTrigger>
-                                                     <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vw] max-h-[95vh] overflow-hidden p-0">
-                                                         <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
-                                                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
-                                 <Badge variant="outline" className="text-xs sm:text-sm w-fit">
-                                   {article.source}
-                                 </Badge>
-                                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                   {formatDate(article.pubDate)}
-                                 </div>
-                               </div>
-                                                             <DialogTitle className="text-lg sm:text-xl leading-tight">
+                          <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vw] max-h-[95vh] overflow-hidden p-0">
+                            <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
+                                <Badge variant="outline" className="text-xs sm:text-sm w-fit">
+                                  {article.source}
+                                </Badge>
+                                <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                  {formatDate(article.pubDate)}
+                                </div>
+                              </div>
+                              <DialogTitle className="text-lg sm:text-xl leading-tight">
                                 {article.title}
                               </DialogTitle>
                             </DialogHeader>
 
-                                                         <div className="p-4 sm:p-6">
-                                                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-                                 <p className="text-xs sm:text-sm text-gray-600">
-                                   Haber kaynağından yükleniyor...
-                                 </p>
-                                 <Button asChild size="sm" variant="outline">
+                            <div className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+                                <p className="text-xs sm:text-sm text-gray-600">
+                                  Haber kaynağından yükleniyor...
+                                </p>
+                                <Button asChild size="sm" variant="outline">
                                   <a
                                     href={article.link}
                                     target="_blank"
@@ -1307,19 +1313,19 @@ export default function NewsApp({
                                   </a>
                                 </Button>
                               </div>
-                              
-                                                             {/* Iframe ile haber kaynağını göster */}
-                               <div className="relative w-full h-[70vh] sm:h-[75vh] lg:h-[80vh] xl:h-[85vh] border rounded-lg overflow-hidden">
+
+                              {/* Iframe ile haber kaynağını göster */}
+                              <div className="relative w-full h-[70vh] sm:h-[75vh] lg:h-[80vh] xl:h-[85vh] border rounded-lg overflow-hidden">
                                 {iframeErrorStates[article.id] ? (
                                   /* Error fallback */
-                                                                       <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                                                                              <div className="text-center p-4 sm:p-6">
-                                         <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                                         <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                                           Haber yüklenemedi
-                                         </h3>
-                                         <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                                        Haber kaynağı iframe içinde gösterilemiyor. 
+                                  <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                                    <div className="text-center p-4 sm:p-6">
+                                      <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                                      <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                                        Haber yüklenemedi
+                                      </h3>
+                                      <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+                                        Haber kaynağı iframe içinde gösterilemiyor.
                                         Bu genellikle güvenlik politikaları nedeniyle olur.
                                       </p>
                                       <Button asChild>
@@ -1348,16 +1354,16 @@ export default function NewsApp({
                                       onError={() => handleIframeError(article.id)}
                                       referrerPolicy="no-referrer"
                                     />
-                                    
-                                                                         {/* Loading overlay */}
-                                     {iframeLoadingStates[article.id] && (
-                                       <div className="absolute inset-0 bg-white flex items-center justify-center">
-                                         <div className="text-center">
-                                           <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                                           <p className="text-xs sm:text-sm text-gray-600">Haber kaynağı yükleniyor...</p>
-                                         </div>
-                                       </div>
-                                     )}
+
+                                    {/* Loading overlay */}
+                                    {iframeLoadingStates[article.id] && (
+                                      <div className="absolute inset-0 bg-white flex items-center justify-center">
+                                        <div className="text-center">
+                                          <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                                          <p className="text-xs sm:text-sm text-gray-600">Haber kaynağı yükleniyor...</p>
+                                        </div>
+                                      </div>
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -1368,15 +1374,15 @@ export default function NewsApp({
                     </Card>
                   );
 
-                                                         // Add ad card after specific news items
-                    if (shouldShowAd(index)) {
-                      const adType = getAdType(index);
-                      if (adType) { // Type guard to ensure adType is not null
-                        items.push(
-                          <AdCard key={`ad-${index}-${adType}`} position={index} adType={adType} />
-                        );
-                      }
+                  // Add ad card after specific news items
+                  if (shouldShowAd(index)) {
+                    const adType = getAdType(index);
+                    if (adType) { // Type guard to ensure adType is not null
+                      items.push(
+                        <AdCard key={`ad-${index}-${adType}`} adType={adType} />
+                      );
                     }
+                  }
 
                   return items;
                 })
