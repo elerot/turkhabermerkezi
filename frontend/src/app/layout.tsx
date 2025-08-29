@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Script from 'next/script';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +26,7 @@ export default function RootLayout({
     <html lang="tr">
       <head>
         {/* Google AdSense Script (Production'da aktif olacak) */}
-        {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && (
+        {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
           <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
@@ -36,7 +35,7 @@ export default function RootLayout({
         )}
 
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-HV62F5XDP1"></script>
-        <Script id="google-analytics">
+        <script>
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments)}
@@ -44,7 +43,7 @@ export default function RootLayout({
 
             gtag('config', 'G-HV62F5XDP1');
           `}
-        </Script>
+        </script>
         {/*<!-- Yandex.RTB -->*/}
         <script>window.yaContextCb=window.yaContextCb||[]</script>
         <script src="https://yandex.ru/ads/system/context.js" async></script>

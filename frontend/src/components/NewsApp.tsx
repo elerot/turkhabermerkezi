@@ -514,7 +514,7 @@ export default function NewsApp({
         hour: "2-digit",
         minute: "2-digit",
       });
-    } catch (error) {
+    } catch {
       return "Tarih hatası";
     }
   };
@@ -902,27 +902,11 @@ export default function NewsApp({
   const AdCard = ({ adType }: { adType: string }) => {
     const [isProduction, setIsProduction] = useState(false);
     const [yandexFailed, setYandexFailed] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
       // Environment kontrolü
       const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
       setIsProduction(env === "production");
-
-      // Mobil cihaz kontrolü
-      const checkMobile = () => {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-        const isMobileViewport = window.innerWidth <= 768;
-        setIsMobile(isMobileDevice || isMobileViewport);
-      };
-
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-
-      return () => {
-        window.removeEventListener('resize', checkMobile);
-      };
     }, []);
 
     // Safety check for adType
@@ -1500,8 +1484,16 @@ export default function NewsApp({
                                       className="w-full h-full"
                                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
                                       loading="lazy"
-                                      onLoad={() => article.id && handleIframeLoad(article.id)}
-                                      onError={() => article.id && handleIframeError(article.id)}
+                                                                             onLoad={() => {
+                                         if (article.id) {
+                                           handleIframeLoad(article.id);
+                                         }
+                                       }}
+                                       onError={() => {
+                                         if (article.id) {
+                                           handleIframeError(article.id);
+                                         }
+                                       }}
                                       referrerPolicy="no-referrer"
                                     />
 
