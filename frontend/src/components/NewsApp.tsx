@@ -578,141 +578,96 @@ export default function NewsApp({
     );
   };
 
-  // Production reklam component'i
+  // Production reklam component'i - Basitleştirilmiş versiyon
   const ProductionAdCard = () => {
     const [adLoaded, setAdLoaded] = useState(false);
     const [adError, setAdError] = useState(false);
     const adContainerRef = useRef<HTMLDivElement>(null);
+    const adInitializedRef = useRef(false);
 
     useEffect(() => {
       // Check if AdSense is properly configured
-      if (!process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
-        console.warn("AdSense client ID not configured");
+      if (!process.env.NEXT_PUBLIC_ADSENSE_CLIENT || !process.env.NEXT_PUBLIC_ADSENSE_SLOT) {
         setAdError(true);
         return;
       }
 
-      if (!process.env.NEXT_PUBLIC_ADSENSE_SLOT) {
-        console.warn("AdSense slot ID not configured");
-        setAdError(true);
-        return;
-      }
-
-      let timeoutId: NodeJS.Timeout;
-      let retryCount = 0;
-      const maxRetries = 5;
+      // Prevent duplicate initialization
+      if (adInitializedRef.current) return;
+      adInitializedRef.current = true;
 
       const initializeAd = () => {
+        if (!adContainerRef.current || typeof window === "undefined" || !(window as any).adsbygoogle) {
+          return;
+        }
+
         try {
-          // DOM container'ın hazır olduğundan emin ol
-          if (!adContainerRef.current) {
-            console.warn("Ad container not ready, retrying...");
-            if (retryCount < maxRetries) {
-              retryCount++;
-              timeoutId = setTimeout(initializeAd, 1000);
-            } else {
-              setAdError(true);
-            }
-            return;
-          }
-
-          // Wait for AdSense to be available
-          if (typeof window !== "undefined" && (window as any).adsbygoogle) {
+          // Clear container and create new ad element
+          adContainerRef.current.innerHTML = '';
+          
+          const adElement = document.createElement('ins');
+          adElement.className = 'adsbygoogle';
+          adElement.style.display = 'block';
+          adElement.setAttribute('data-ad-client', process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '');
+          adElement.setAttribute('data-ad-slot', process.env.NEXT_PUBLIC_ADSENSE_SLOT || '');
+          adElement.setAttribute('data-ad-format', 'auto');
+          adElement.setAttribute('data-full-width-responsive', 'true');
+          
+          adContainerRef.current.appendChild(adElement);
+          
+          // Push ad after DOM settles
+          setTimeout(() => {
             try {
-              // Container'ı temizle ve yeniden oluştur
-              if (adContainerRef.current) {
-                adContainerRef.current.innerHTML = `
-                  <ins class="adsbygoogle"
-                       style="display:block"
-                       data-ad-client="${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}"
-                       data-ad-slot="${process.env.NEXT_PUBLIC_ADSENSE_SLOT}"
-                       data-ad-format="auto"
-                       data-full-width-responsive="true"></ins>
-                `;
-
-                // Push the ad with proper error handling
-                ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-                setAdLoaded(true);
-              }
+              (window as any).adsbygoogle.push({});
+              setAdLoaded(true);
             } catch (err) {
-              console.error("AdSense push error:", err);
-              if (retryCount < maxRetries) {
-                retryCount++;
-                timeoutId = setTimeout(initializeAd, 2000);
-              } else {
-                setAdError(true);
-              }
-            }
-          } else {
-            console.warn("AdSense not available, retrying...");
-            if (retryCount < maxRetries) {
-              retryCount++;
-              timeoutId = setTimeout(initializeAd, 1000);
-            } else {
+              console.warn("AdSense push failed:", err);
               setAdError(true);
             }
-          }
+          }, 100);
         } catch (err) {
-          console.error("Ad initialization error:", err);
-          if (retryCount < maxRetries) {
-            retryCount++;
-            timeoutId = setTimeout(initializeAd, 2000);
-          } else {
-            setAdError(true);
+          console.warn("AdSense initialization failed:", err);
+          setAdError(true);
+        }
+      };
+
+      // Wait for AdSense to be ready
+      if ((window as any).adsbygoogle) {
+        setTimeout(initializeAd, 500);
+      } else {
+        const checkInterval = setInterval(() => {
+          if ((window as any).adsbygoogle) {
+            clearInterval(checkInterval);
+            initializeAd();
           }
-        }
-      };
-
-      // DOM hazır olduktan sonra başlat
-      const startInitialization = () => {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initializeAd);
-        } else {
-          initializeAd();
-        }
-      };
-
-      startInitialization();
-
-      // Cleanup function
-      return () => {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        document.removeEventListener('DOMContentLoaded', initializeAd);
-      };
+        }, 1000);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          setAdError(true);
+        }, 10000);
+      }
     }, []);
 
-    // If there's an error, show a fallback
     if (adError) {
-      const isConfigError = !process.env.NEXT_PUBLIC_ADSENSE_CLIENT || !process.env.NEXT_PUBLIC_ADSENSE_SLOT;
-              return (
-          <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
-            <div className="text-center p-4">
-              <div className="text-gray-500 text-sm mb-2">
-                {isConfigError ? "AdSense yapılandırılmamış" : "Reklam yüklenemedi"}
-              </div>
-              <Badge className="bg-blue-600 text-white text-xs">
-                {isConfigError ? "Yapılandırma Hatası" : "Teknik Sorun"}
-              </Badge>
-            </div>
+      return (
+        <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border flex items-center justify-center">
+          <div className="text-center p-4">
+            <div className="text-gray-500 text-sm mb-2">Reklam yüklenemedi</div>
+            <Badge className="bg-blue-600 text-white text-xs">Teknik Sorun</Badge>
           </div>
-        );
+        </div>
+      );
     }
 
     return (
-      <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
-        {/* AdSense container - ref ile kontrol ediliyor */}
+      <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
         <div
           ref={adContainerRef}
           className="w-full h-full"
-          style={{
-            backgroundColor: "#f5f5f5",
-            minHeight: "128px" // 32 * 4 = 128px (h-32)
-          }}
+          style={{ backgroundColor: "#f5f5f5", minHeight: "80px" }}
         />
-
-        {/* Production indicator */}
         <div className="absolute top-2 right-2">
           <Badge className="bg-blue-600 text-white text-xs">
             {adLoaded ? "REKLAM" : "YÜKLENİYOR..."}
@@ -817,7 +772,7 @@ export default function NewsApp({
     // If there's an error, show a fallback
     if (adError) {
       return (
-        <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
+        <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
           <div className="text-center p-4">
             <div className="text-gray-500 text-sm mb-2">
               Yandex reklam yüklenemedi
@@ -834,7 +789,7 @@ export default function NewsApp({
     }
 
     return (
-      <div className="w-full h-32 sm:h-40 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
+      <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
         {/* Yandex RTB container */}
         <div
           id="yandex_rtb_R-A-17002789-1"
@@ -857,46 +812,32 @@ export default function NewsApp({
     );
   };
 
-  // Reklam gösterim mantığı
-  const shouldShowAd = (index: number) => {
-    // Sayfada 2 reklam göster: Yandex ve Google
-    // Random pozisyonlarda ama önce Yandex sonra Google sırasında
-    const totalNews = news.length;
-    if (totalNews === 0) return false;
-    
-    // Random pozisyonlar için seed kullan (sayfa yenilendiğinde farklı olur)
-    const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
-    const random1 = (seed * 9301 + 49297) % totalNews;
-    const random2 = (seed * 49297 + 9301) % totalNews;
-    
-    // İlk reklam (Yandex) - random pozisyon
-    const firstAdPosition = random1;
-    // İkinci reklam (Google) - farklı random pozisyon
-    const secondAdPosition = random2 !== firstAdPosition ? random2 : (random2 + 1) % totalNews;
-    
-    return index === firstAdPosition || index === secondAdPosition;
-  };
+     // Reklam gösterim mantığı - Sadece Yandex
+   const shouldShowAd = (index: number) => {
+     // Sayfada sadece 1 reklam göster: Yandex
+     const totalNews = news.length;
+     if (totalNews === 0) return false;
+     
+     // Random pozisyon için seed kullan (sayfa yenilendiğinde farklı olur)
+     const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
+     const randomPosition = (seed * 9301 + 49297) % totalNews;
+     
+     return index === randomPosition;
+   };
 
-  // Hangi reklam türünü göstereceğini belirle
-  const getAdType = (index: number) => {
-    // Sayfada 2 reklam göster: Yandex ve Google
-    const totalNews = news.length;
-    if (totalNews === 0) return null;
-    
-    // Random pozisyonlar için seed kullan (sayfa yenilendiğinde farklı olur)
-    const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
-    const random1 = (seed * 9301 + 49297) % totalNews;
-    const random2 = (seed * 49297 + 9301) % totalNews;
-    
-    // İlk reklam (Yandex) - random pozisyon
-    const firstAdPosition = random1;
-    // İkinci reklam (Google) - farklı random pozisyon
-    const secondAdPosition = random2 !== firstAdPosition ? random2 : (random2 + 1) % totalNews;
-    
-    if (index === firstAdPosition) return "yandex";
-    if (index === secondAdPosition) return "google";
-    return null;
-  };
+   // Hangi reklam türünü göstereceğini belirle - Sadece Yandex
+   const getAdType = (index: number) => {
+     // Sayfada sadece 1 reklam göster: Yandex
+     const totalNews = news.length;
+     if (totalNews === 0) return null;
+     
+     // Random pozisyon için seed kullan (sayfa yenilendiğinde farklı olur)
+     const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
+     const randomPosition = (seed * 9301 + 49297) % totalNews;
+     
+     if (index === randomPosition) return "yandex";
+     return null;
+   };
 
   // Ana reklam component'i (environment'a göre production seçer)
   const AdCard = ({ adType }: { adType: string }) => {
@@ -931,13 +872,83 @@ export default function NewsApp({
     return null;
   };
 
-  useEffect(() => {
-    // İlk yüklemede sadece metadata'ları çek
-    fetchSources();
-    fetchYears();
-    fetchStats();
-    // fetchNews burada YOK - props useEffect'i çekecek
-  }, []);
+     useEffect(() => {
+     // İlk yüklemede sadece metadata'ları çek
+     fetchSources();
+     fetchYears();
+     fetchStats();
+     // fetchNews burada YOK - props useEffect'i çekecek
+
+     // Google AdSense Banner'ı initialize et
+     if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
+       const initializeGoogleBanner = () => {
+         if ((window as any).adsbygoogle) {
+           try {
+             const bannerElement = document.getElementById('google-adsense-banner');
+             if (bannerElement) {
+               bannerElement.innerHTML = '';
+               
+               const adElement = document.createElement('ins');
+               adElement.className = 'adsbygoogle';
+               adElement.style.display = 'block';
+               adElement.setAttribute('data-ad-client', process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '');
+               adElement.setAttribute('data-ad-slot', process.env.NEXT_PUBLIC_ADSENSE_SLOT || '');
+               adElement.setAttribute('data-ad-format', 'auto');
+               adElement.setAttribute('data-full-width-responsive', 'true');
+               
+               bannerElement.appendChild(adElement);
+               
+               setTimeout(() => {
+                 try {
+                   (window as any).adsbygoogle.push({});
+                 } catch (err) {
+                   console.warn("Google Banner AdSense push failed:", err);
+                 }
+               }, 100);
+             }
+           } catch (err) {
+             console.warn("Google Banner initialization failed:", err);
+           }
+         }
+       };
+
+       // Wait for AdSense to be ready
+       if ((window as any).adsbygoogle) {
+         setTimeout(initializeGoogleBanner, 500);
+       } else {
+         const checkInterval = setInterval(() => {
+           if ((window as any).adsbygoogle) {
+             clearInterval(checkInterval);
+             initializeGoogleBanner();
+           }
+         }, 1000);
+         
+         // Timeout after 10 seconds
+         setTimeout(() => {
+           clearInterval(checkInterval);
+         }, 10000);
+       }
+     }
+
+     // Global AdSense error handler to prevent "no_div" errors from breaking the page
+     if (typeof window !== "undefined") {
+       const originalError = window.console.error;
+       window.console.error = (...args) => {
+         // Filter out AdSense "no_div" errors
+         if (args[0] && typeof args[0] === 'string' && args[0].includes('no_div')) {
+           console.warn('AdSense no_div error suppressed:', args[0]);
+           return;
+         }
+         // Log other errors normally
+         originalError.apply(window.console, args);
+       };
+
+       // Cleanup function
+       return () => {
+         window.console.error = originalError;
+       };
+     }
+   }, []);
 
   useEffect(() => {
     // Ay listesini güncelle
@@ -1302,21 +1313,39 @@ export default function NewsApp({
           </div>
         )}
 
-        {/* News Grid */}
-        {!news || news.length === 0 ? (
-          <div className="text-center py-12">
-            <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-xl text-gray-600">
-              Seçilen kriterlerde haber bulunamadı.
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Filtreleri değiştirmeyi deneyin veya daha geniş tarih aralığı
-              seçin.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
+                 {/* Google AdSense Banner - En üstte tek satır */}
+         {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+           <div className="mb-6">
+             <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
+               <div
+                 id="google-adsense-banner"
+                 className="w-full h-full"
+                 style={{ backgroundColor: "#f5f5f5", minHeight: "80px" }}
+               />
+               <div className="absolute top-2 right-2">
+                 <Badge className="bg-blue-600 text-white text-xs">
+                   REKLAM
+                 </Badge>
+               </div>
+             </div>
+           </div>
+         )}
+
+         {/* News Grid */}
+         {!news || news.length === 0 ? (
+           <div className="text-center py-12">
+             <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+             <p className="text-xl text-gray-600">
+               Seçilen kriterlerde haber bulunamadı.
+             </p>
+             <p className="text-sm text-gray-500 mt-2">
+               Filtreleri değiştirmeyi deneyin veya daha geniş tarih aralığı
+               seçin.
+             </p>
+           </div>
+         ) : (
+           <>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
               {news && news.length > 0 && news
                                 .map((article, index) => {
                   // Safety check for article object
@@ -1389,16 +1418,16 @@ export default function NewsApp({
                         </div>
                       )}
 
-                      <CardHeader className="pb-2 px-3 md:px-6">
-                        <CardTitle className="text-sm md:text-lg leading-tight line-clamp-2 md:line-clamp-3">
-                          {article.title || "Başlık bulunamadı"}
-                        </CardTitle>
-                      </CardHeader>
+                                             <CardHeader className="pb-2 px-3 md:px-6">
+                         <CardTitle className="text-sm md:text-lg leading-tight">
+                           {article.title || "Başlık bulunamadı"}
+                         </CardTitle>
+                       </CardHeader>
 
-                      <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
-                        <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
-                          {article.description || "Açıklama bulunamadı"}
-                        </CardDescription>
+                       <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
+                         <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
+                           {article.description || "Açıklama bulunamadı"}
+                         </CardDescription>
 
                         <Dialog onOpenChange={(open) => {
                           if (open && article.id) {
