@@ -17,7 +17,6 @@ app.use(express.json());
 // Data storage paths
 const DATA_DIR = "./data";
 const ARCHIVES_DIR = path.join(DATA_DIR, "archives");
-const NEWS_FILE = path.join(DATA_DIR, "news.json");
 const RSS_FEEDS_FILE = path.join(DATA_DIR, "rss-feeds.json");
 
 // Ensure data directories exist
@@ -101,8 +100,8 @@ function createTurkishSlug(text) {
     .replace(/[^a-z0-9-]/g, "");
 }
 
-// In-memory data storage
-let newsData = [];
+// In-memory data storage - only for today's news and recent cache
+let todayNews = [];
 let lastUpdate = new Date();
 
 // 🚀 SMART CACHE SYSTEM
@@ -317,51 +316,108 @@ function getTodayNewsFromCache() {
     return cache.todayNews.data;
   }
 
-  // Generate today's news
+  // Generate today's news from memory or archive file
   console.log("🔄 Cache MISS: Generating today news cache");
-  const todayNews = newsData.filter((article) => article.date_key === todayKey);
+  let todayNewsData = todayNews; // Use in-memory today's news
+
+  // If no in-memory data, try to load from archive file
+  if (todayNewsData.length === 0) {
+    const todayArchiveFile = path.join(
+      ARCHIVES_DIR,
+      todayKey.split("-")[0],
+      todayKey.split("-")[1],
+      `${todayKey}.json`
+    );
+
+    if (fs.existsSync(todayArchiveFile)) {
+      try {
+        const data = fs.readFileSync(todayArchiveFile, "utf8");
+        todayNewsData = JSON.parse(data);
+      } catch (error) {
+        console.error("Error loading today's news from archive:", error);
+        todayNewsData = [];
+      }
+    }
+  }
 
   // Update cache
   cache.todayNews = {
-    data: todayNews,
+    data: todayNewsData,
     lastUpdate: Date.now(),
     key: todayKey,
   };
 
-  return todayNews;
+  return todayNewsData;
 }
 
-// Get metadata from cache or generate
+// Get metadata from cache or generate from summary files
 function getMetadataFromCache() {
   if (isCacheValid(cache.metadata, CACHE_CONFIG.METADATA_TTL)) {
     console.log("📦 Cache HIT: Metadata from cache");
     return cache.metadata;
   }
 
-  console.log("🔄 Cache MISS: Generating metadata cache");
+  console.log("🔄 Cache MISS: Generating metadata cache from summary files");
 
-  // Generate metadata
-  const sources = [
-    ...new Set(newsData.map((article) => article.source)),
-  ].sort();
-  const years = [
-    ...new Set(newsData.map((article) => article.date_key.split("-")[0])),
-  ]
-    .sort()
-    .reverse();
-  const dates = [...new Set(newsData.map((article) => article.date_key))]
-    .sort()
-    .reverse();
+  try {
+    // Get sources from RSS feeds
+    const sources = feeds.map(feed => feed.name).sort();
 
-  // Update cache
-  cache.metadata = {
-    sources,
-    years,
-    dates,
-    lastUpdate: Date.now(),
-  };
+    // Get years from archive directories
+    const years = [];
+    if (fs.existsSync(ARCHIVES_DIR)) {
+      const yearDirs = fs.readdirSync(ARCHIVES_DIR)
+        .filter(dir => fs.statSync(path.join(ARCHIVES_DIR, dir)).isDirectory())
+        .sort()
+        .reverse();
+      years.push(...yearDirs);
+    }
 
-  return cache.metadata;
+    // Get dates from summary files
+    const dates = [];
+    years.forEach(year => {
+      const yearDir = path.join(ARCHIVES_DIR, year);
+      if (fs.existsSync(yearDir)) {
+        const monthDirs = fs.readdirSync(yearDir)
+          .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory())
+          .sort()
+          .reverse();
+        
+        monthDirs.forEach(month => {
+          const monthDir = path.join(yearDir, month);
+          const summaryFile = path.join(monthDir, "summary.json");
+          if (fs.existsSync(summaryFile)) {
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+              if (summary.days) {
+                dates.push(...summary.days);
+              }
+            } catch (error) {
+              console.warn(`Error reading summary file: ${summaryFile}`, error);
+            }
+          }
+        });
+      }
+    });
+
+    // Update cache
+    cache.metadata = {
+      sources,
+      years,
+      dates: dates.sort().reverse(),
+      lastUpdate: Date.now(),
+    };
+
+    return cache.metadata;
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    return {
+      sources: [],
+      years: [],
+      dates: [],
+      lastUpdate: Date.now(),
+    };
+  }
 }
 
 // Clear relevant caches when new news arrive
@@ -491,121 +547,95 @@ function extractImageFromRSS(item) {
   return imageUrl;
 }
 
-// Load existing data
-function loadNewsData() {
+// Load today's news from archive files
+function loadTodayNews() {
   try {
-    if (fs.existsSync(NEWS_FILE)) {
-      const data = fs.readFileSync(NEWS_FILE, "utf8");
-      newsData = JSON.parse(data);
-      console.log(`✅ ${newsData.length} haber yüklendi`);
+    const todayKey = getTodayKey();
+    const todayArchiveFile = path.join(
+      ARCHIVES_DIR,
+      todayKey.split("-")[0], // year
+      todayKey.split("-")[1], // month
+      `${todayKey}.json`
+    );
 
-      // Initialize today's cache
-      getTodayNewsFromCache();
+    if (fs.existsSync(todayArchiveFile)) {
+      const data = fs.readFileSync(todayArchiveFile, "utf8");
+      todayNews = JSON.parse(data);
+      console.log(`✅ Bugün için ${todayNews.length} haber yüklendi`);
     } else {
-      newsData = [];
-      console.log("🆕 Boş veri ile başlatıldı");
+      todayNews = [];
+      console.log("🆕 Bugün için henüz haber yok");
     }
   } catch (error) {
-    console.error("❌ Veri yükleme hatası:", error);
-    newsData = [];
+    console.error("❌ Bugünün haberlerini yükleme hatası:", error);
+    todayNews = [];
   }
 }
 
-// Save data to file
-function saveNewsData() {
+// Save article to archive file
+function saveArticleToArchive(article) {
   try {
-    // if (newsData.length > 10000) {
-    //   newsData = newsData.slice(-10000);
-    // }
-    fs.writeFileSync(NEWS_FILE, JSON.stringify(newsData, null, 2));
-    console.log(`💾 ${newsData.length} haber kaydedildi`);
+    const date = new Date(article.date_key + "T00:00:00Z");
+    const { archiveFile } = createArchiveStructure(date);
+
+    // Read existing articles for this date
+    let existingArticles = [];
+    if (fs.existsSync(archiveFile)) {
+      const data = fs.readFileSync(archiveFile, "utf8");
+      existingArticles = JSON.parse(data);
+    }
+
+    // Check if article already exists (by content_hash)
+    const exists = existingArticles.some(existing => existing.content_hash === article.content_hash);
+    if (exists) {
+      return false; // Article already exists
+    }
+
+    // Add new article
+    existingArticles.push(article);
+    
+    // Sort by created_at (newest first)
+    existingArticles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Save to archive file
+    fs.writeFileSync(archiveFile, JSON.stringify(existingArticles, null, 2));
+
+    // Update summary files
+    updateArchiveSummaries(article.date_key);
+
+    return true; // Article was added
   } catch (error) {
-    console.error("❌ Veri kaydetme hatası:", error);
+    console.error("Error saving article to archive:", error);
+    return false;
   }
 }
 
-// Generate hierarchical archive files
-function generateHierarchicalArchives() {
+// Update archive summary files for a specific date
+function updateArchiveSummaries(dateKey) {
   try {
-    // Group news by date
-    const dateGroups = {};
-    newsData.forEach((article) => {
-      if (!dateGroups[article.date_key]) {
-        dateGroups[article.date_key] = [];
-      }
-      dateGroups[article.date_key].push(article);
-    });
+    const [year, month] = dateKey.split("-");
+    const yearMonth = `${year}-${month}`;
 
-    // Create hierarchical archive files
-    Object.keys(dateGroups).forEach((dateKey) => {
-      const date = new Date(dateKey + "T00:00:00Z");
-      const { archiveFile } = createArchiveStructure(date);
+    // Update month summary
+    const monthDir = path.join(ARCHIVES_DIR, year, month);
+    if (fs.existsSync(monthDir)) {
+      // Read all daily files in this month to count news
+      const days = fs.readdirSync(monthDir)
+        .filter(file => file.endsWith('.json') && file !== 'summary.json')
+        .map(file => file.replace('.json', ''))
+        .sort();
 
-      // Save daily archive
-      fs.writeFileSync(
-        archiveFile,
-        JSON.stringify(dateGroups[dateKey], null, 2)
-      );
-    });
+      let totalNews = 0;
+      const allNews = [];
 
-    // Generate year/month summary files
-    generateArchiveSummaries();
-
-    console.log("📁 Hierarchical archive files generated");
-  } catch (error) {
-    console.error("Error generating archives:", error);
-  }
-}
-
-// Generate archive summary files
-function generateArchiveSummaries() {
-  try {
-    const years = new Set();
-    const monthsInYear = {};
-    const daysInMonth = {};
-
-    newsData.forEach((article) => {
-      const [year, month] = article.date_key.split("-");
-      const yearMonth = `${year}-${month}`;
-
-      years.add(year);
-
-      if (!monthsInYear[year]) {
-        monthsInYear[year] = new Set();
-      }
-      monthsInYear[year].add(month);
-
-      if (!daysInMonth[yearMonth]) {
-        daysInMonth[yearMonth] = new Set();
-      }
-      daysInMonth[yearMonth].add(article.date_key);
-    });
-
-    // Generate year summaries
-    years.forEach((year) => {
-      const yearDir = path.join(ARCHIVES_DIR, year);
-      const yearSummary = {
-        year: parseInt(year),
-        months: Array.from(monthsInYear[year]).sort(),
-        totalNews: newsData.filter((n) => n.date_key.startsWith(year)).length,
-        generated: new Date().toISOString(),
-      };
-
-      if (fs.existsSync(yearDir)) {
-        fs.writeFileSync(
-          path.join(yearDir, "summary.json"),
-          JSON.stringify(yearSummary, null, 2)
-        );
-      }
-    });
-
-    // Generate month summaries
-    Object.keys(daysInMonth).forEach((yearMonth) => {
-      const [year, month] = yearMonth.split("-");
-      const monthDir = path.join(ARCHIVES_DIR, year, month);
-      const monthNews = newsData.filter((n) =>
-        n.date_key.startsWith(yearMonth)
-      );
+      days.forEach(day => {
+        const dayFile = path.join(monthDir, `${day}.json`);
+        if (fs.existsSync(dayFile)) {
+          const dayData = JSON.parse(fs.readFileSync(dayFile, "utf8"));
+          totalNews += dayData.length;
+          allNews.push(...dayData);
+        }
+      });
 
       const monthSummary = {
         year: parseInt(year),
@@ -615,21 +645,48 @@ function generateArchiveSummaries() {
           parseInt(month) - 1,
           1
         ).toLocaleDateString("tr-TR", { month: "long" }),
-        days: Array.from(daysInMonth[yearMonth]).sort(),
-        totalNews: monthNews.length,
-        topSources: getTopSources(monthNews),
+        days: days,
+        totalNews: totalNews,
+        topSources: getTopSources(allNews),
         generated: new Date().toISOString(),
       };
 
-      if (fs.existsSync(monthDir)) {
-        fs.writeFileSync(
-          path.join(monthDir, "summary.json"),
-          JSON.stringify(monthSummary, null, 2)
-        );
-      }
-    });
+      fs.writeFileSync(
+        path.join(monthDir, "summary.json"),
+        JSON.stringify(monthSummary, null, 2)
+      );
+    }
+
+    // Update year summary
+    const yearDir = path.join(ARCHIVES_DIR, year);
+    if (fs.existsSync(yearDir)) {
+      const months = fs.readdirSync(yearDir)
+        .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory())
+        .sort();
+
+      let yearTotalNews = 0;
+      months.forEach(month => {
+        const monthSummaryFile = path.join(yearDir, month, "summary.json");
+        if (fs.existsSync(monthSummaryFile)) {
+          const monthSummary = JSON.parse(fs.readFileSync(monthSummaryFile, "utf8"));
+          yearTotalNews += monthSummary.totalNews || 0;
+        }
+      });
+
+      const yearSummary = {
+        year: parseInt(year),
+        months: months,
+        totalNews: yearTotalNews,
+        generated: new Date().toISOString(),
+      };
+
+      fs.writeFileSync(
+        path.join(yearDir, "summary.json"),
+        JSON.stringify(yearSummary, null, 2)
+      );
+    }
   } catch (error) {
-    console.error("Error generating summaries:", error);
+    console.error("Error updating summaries:", error);
   }
 }
 
@@ -646,13 +703,11 @@ function getTopSources(newsArray) {
     .map(([source, count]) => ({ source, count }));
 }
 
-// 🔄 ENHANCED FETCH WITH CACHE INVALIDATION
+// 🔄 ENHANCED FETCH WITH ARCHIVE STORAGE
 async function fetchNews() {
   console.log("📡 RSS haberleri çekiliyor...");
   let totalNew = 0;
-  const existingHashes = new Set(
-    newsData.map((article) => article.content_hash)
-  );
+  let todayNew = 0;
 
   for (const feed of feeds) {
     try {
@@ -663,8 +718,6 @@ async function fetchNews() {
         if (!item.title || !item.link) continue;
 
         const hash = generateHash(item.title, item.link);
-        if (existingHashes.has(hash)) continue;
-
         const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
         const dateKey = getDateKey(pubDate);
         const hourKey = getHourKey(pubDate);
@@ -692,9 +745,17 @@ async function fetchNews() {
           image: imageUrl,
         };
 
-        newsData.push(article);
-        existingHashes.add(hash);
-        totalNew++;
+        // Save article to archive file
+        const wasAdded = saveArticleToArchive(article);
+        if (wasAdded) {
+          totalNew++;
+          
+          // If it's today's news, add to todayNews array
+          if (dateKey === getTodayKey()) {
+            todayNews.push(article);
+            todayNew++;
+          }
+        }
       }
     } catch (error) {
       console.error(`❌ ${feed.name} hatası:`, error.message);
@@ -702,16 +763,15 @@ async function fetchNews() {
   }
 
   if (totalNew > 0) {
-    newsData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    saveNewsData();
-    generateHierarchicalArchives();
+    // Sort today's news by created_at (newest first)
+    todayNews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     // 🚀 INVALIDATE CACHE WHEN NEW NEWS ARRIVE
     invalidateCache();
 
     lastUpdate = new Date();
     console.log(
-      `✅ RSS tamamlandı. Yeni haber: ${totalNew} - Cache invalidated`
+      `✅ RSS tamamlandı. Yeni haber: ${totalNew} (bugün: ${todayNew}) - Cache invalidated`
     );
   } else {
     console.log(`✅ RSS tamamlandı. Yeni haber: ${totalNew} - Cache preserved`);
@@ -720,7 +780,7 @@ async function fetchNews() {
 
 // 🚀 CACHED API ROUTES
 
-// Get news with smart caching
+// Get news with smart caching from archive files
 app.get("/api/news", (req, res) => {
   const startTime = Date.now();
   const cacheKey = generateCacheKey(req);
@@ -750,98 +810,155 @@ app.get("/api/news", (req, res) => {
   } = req.query;
   const offset = (page - 1) * limit;
 
-  let filteredNews = [...newsData];
+  // Load news from archive files based on filters
+  let filteredNews = [];
 
-  // Legacy date support
-  if (date && date !== "all") {
-    filteredNews = filteredNews.filter((article) => article.date_key === date);
-  }
+  try {
+    // If specific day is requested
+    if (day && day !== "all" && month && month !== "all" && year && year !== "all") {
+      const dayPadded = day.padStart(2, "0");
+      const monthPadded = month.padStart(2, "0");
+      const dateKey = `${year}-${monthPadded}-${dayPadded}`;
+      const archiveFile = path.join(ARCHIVES_DIR, year, monthPadded, `${dateKey}.json`);
+      
+      if (fs.existsSync(archiveFile)) {
+        const data = fs.readFileSync(archiveFile, "utf8");
+        filteredNews = JSON.parse(data);
+      }
+    }
+    // If specific month is requested
+    else if (month && month !== "all" && year && year !== "all") {
+      const monthPadded = month.padStart(2, "0");
+      const monthDir = path.join(ARCHIVES_DIR, year, monthPadded);
+      
+      if (fs.existsSync(monthDir)) {
+        const dayFiles = fs.readdirSync(monthDir)
+          .filter(file => file.endsWith('.json') && file !== 'summary.json')
+          .sort()
+          .reverse(); // Newest first
+        
+        for (const dayFile of dayFiles) {
+          const dayData = JSON.parse(fs.readFileSync(path.join(monthDir, dayFile), "utf8"));
+          filteredNews.push(...dayData);
+        }
+      }
+    }
+    // If specific year is requested
+    else if (year && year !== "all") {
+      const yearDir = path.join(ARCHIVES_DIR, year);
+      
+      if (fs.existsSync(yearDir)) {
+        const months = fs.readdirSync(yearDir)
+          .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory())
+          .sort()
+          .reverse(); // Newest first
+        
+        for (const monthDir of months) {
+          const monthPath = path.join(yearDir, monthDir);
+          const dayFiles = fs.readdirSync(monthPath)
+            .filter(file => file.endsWith('.json') && file !== 'summary.json')
+            .sort()
+            .reverse();
+          
+          for (const dayFile of dayFiles) {
+            const dayData = JSON.parse(fs.readFileSync(path.join(monthPath, dayFile), "utf8"));
+            filteredNews.push(...dayData);
+          }
+        }
+      }
+    }
+    // If no specific date filters, use today's news + recent days (last 30 days)
+    else {
+      // Start with today's news from memory
+      filteredNews = [...todayNews];
+      
+      // Add recent days (last 30 days)
+      const today = new Date();
+      for (let i = 1; i <= 30; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = getDateKey(date);
+        const archiveFile = path.join(
+          ARCHIVES_DIR,
+          dateKey.split("-")[0],
+          dateKey.split("-")[1],
+          `${dateKey}.json`
+        );
+        
+        if (fs.existsSync(archiveFile)) {
+          const dayData = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
+          filteredNews.push(...dayData);
+        }
+      }
+    }
 
-  // New hierarchical date filtering
-  if (year && year !== "all") {
-    filteredNews = filteredNews.filter((article) =>
-      article.date_key.startsWith(year)
+    // Legacy date support
+    if (date && date !== "all") {
+      filteredNews = filteredNews.filter((article) => article.date_key === date);
+    }
+
+    // Source filtering
+    if (source && source !== "all") {
+      filteredNews = filteredNews.filter((article) => {
+        // Tam eşleşme kontrolü
+        if (article.source === source) return true;
+        
+        // Slug eşleşmesi kontrolü
+        const articleSlug = createTurkishSlug(article.source);
+        const searchSlug = createTurkishSlug(source);
+        return articleSlug === searchSlug;
+      });
+    }
+
+    // Hour filtering
+    if (hour && hour !== "all") {
+      filteredNews = filteredNews.filter((article) => article.hour_key === hour);
+    }
+
+    // Text search functionality
+    const { search, q } = req.query;
+    const searchQuery = search || q;
+    
+    if (searchQuery && searchQuery.trim() !== "") {
+      const searchTerm = searchQuery.trim().toLowerCase();
+      filteredNews = filteredNews.filter((article) => {
+        const titleMatch = article.title && article.title.toLowerCase().includes(searchTerm);
+        const descriptionMatch = article.description && article.description.toLowerCase().includes(searchTerm);
+        const sourceMatch = article.source && article.source.toLowerCase().includes(searchTerm);
+        
+        return titleMatch || descriptionMatch || sourceMatch;
+      });
+    }
+
+    // Sort by created_at (newest first)
+    filteredNews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const totalCount = filteredNews.length;
+    const paginatedNews = filteredNews.slice(offset, offset + parseInt(limit));
+
+    const response = {
+      news: paginatedNews,
+      pagination: {
+        current: parseInt(page),
+        total: Math.ceil(totalCount / limit),
+        count: totalCount,
+      },
+    };
+
+    // Cache the response
+    cache.responses.set(cacheKey, {
+      data: response,
+      lastUpdate: Date.now(),
+    });
+
+    console.log(
+      `✅ API response generated and cached [${Date.now() - startTime}ms]`
     );
+    res.json(response);
+  } catch (error) {
+    console.error("❌ Error in /api/news:", error);
+    res.status(500).json({ error: "Haberler yüklenirken hata oluştu" });
   }
-
-  if (month && month !== "all") {
-    const monthPadded = month.padStart(2, "0");
-    filteredNews = filteredNews.filter((article) => {
-      const [articleYear, articleMonth] = article.date_key.split("-");
-      return year === "all" || articleYear === year
-        ? articleMonth === monthPadded
-        : false;
-    });
-  }
-
-  if (day && day !== "all") {
-    const dayPadded = day.padStart(2, "0");
-    filteredNews = filteredNews.filter((article) => {
-      const [articleYear, articleMonth, articleDay] =
-        article.date_key.split("-");
-      return articleDay === dayPadded;
-    });
-  }
-
-  if (source && source !== "all") {
-    // Hem tam eşleşme hem de slug eşleşmesi kontrol et
-    filteredNews = filteredNews.filter((article) => {
-      // Tam eşleşme kontrolü
-      if (article.source === source) return true;
-      
-      // Slug eşleşmesi kontrolü
-      const articleSlug = createTurkishSlug(article.source);
-      const searchSlug = createTurkishSlug(source);
-      return articleSlug === searchSlug;
-    });
-  }
-
-  if (hour && hour !== "all") {
-    filteredNews = filteredNews.filter((article) => article.hour_key === hour);
-  }
-
-  // Text search functionality - search in title and description
-  const { search, q } = req.query;
-  const searchQuery = search || q; // Support both 'search' and 'q' parameters
-  
-  if (searchQuery && searchQuery.trim() !== "") {
-    const searchTerm = searchQuery.trim().toLowerCase();
-    filteredNews = filteredNews.filter((article) => {
-      // Search in title
-      const titleMatch = article.title && article.title.toLowerCase().includes(searchTerm);
-      
-      // Search in description
-      const descriptionMatch = article.description && article.description.toLowerCase().includes(searchTerm);
-      
-      // Search in source name
-      const sourceMatch = article.source && article.source.toLowerCase().includes(searchTerm);
-      
-      return titleMatch || descriptionMatch || sourceMatch;
-    });
-  }
-
-  const totalCount = filteredNews.length;
-  const paginatedNews = filteredNews.slice(offset, offset + parseInt(limit));
-
-  const response = {
-    news: paginatedNews,
-    pagination: {
-      current: parseInt(page),
-      total: Math.ceil(totalCount / limit),
-      count: totalCount,
-    },
-  };
-
-  // Cache the response
-  cache.responses.set(cacheKey, {
-    data: response,
-    lastUpdate: Date.now(),
-  });
-
-  console.log(
-    `✅ API response generated and cached [${Date.now() - startTime}ms]`
-  );
-  res.json(response);
 });
 
 // Get available years (cached)
@@ -853,42 +970,54 @@ app.get("/api/years", (req, res) => {
 // Get available months for a year (cached)
 app.get("/api/months/:year", (req, res) => {
   const year = req.params.year;
-  const months = [
-    ...new Set(
-      newsData
-        .filter((article) => article.date_key.startsWith(year))
-        .map((article) => article.date_key.split("-")[1])
-    ),
-  ]
-    .sort()
-    .reverse();
+  
+  try {
+    const yearDir = path.join(ARCHIVES_DIR, year);
+    let months = [];
+    
+    if (fs.existsSync(yearDir)) {
+      months = fs.readdirSync(yearDir)
+        .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory())
+        .sort()
+        .reverse();
+    }
 
-  const monthsWithNames = months.map((month) => ({
-    value: month,
-    name: new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString(
-      "tr-TR",
-      { month: "long" }
-    ),
-  }));
+    const monthsWithNames = months.map((month) => ({
+      value: month,
+      name: new Date(parseInt(year), parseInt(month) - 1, 1).toLocaleDateString(
+        "tr-TR",
+        { month: "long" }
+      ),
+    }));
 
-  res.json(monthsWithNames);
+    res.json(monthsWithNames);
+  } catch (error) {
+    console.error("Error getting months:", error);
+    res.status(500).json({ error: "Aylar yüklenirken hata oluştu" });
+  }
 });
 
 // Get available days for a year/month (cached)
 app.get("/api/days/:year/:month", (req, res) => {
   const { year, month } = req.params;
   const monthPadded = month.padStart(2, "0");
-  const yearMonth = `${year}-${monthPadded}`;
+  
+  try {
+    const monthDir = path.join(ARCHIVES_DIR, year, monthPadded);
+    let days = [];
+    
+    if (fs.existsSync(monthDir)) {
+      days = fs.readdirSync(monthDir)
+        .filter(file => file.endsWith('.json') && file !== 'summary.json')
+        .map(file => file.replace('.json', ''))
+        .sort((a, b) => parseInt(b) - parseInt(a));
+    }
 
-  const days = [
-    ...new Set(
-      newsData
-        .filter((article) => article.date_key.startsWith(yearMonth))
-        .map((article) => article.date_key.split("-")[2])
-    ),
-  ].sort((a, b) => parseInt(b) - parseInt(a));
-
-  res.json(days);
+    res.json(days);
+  } catch (error) {
+    console.error("Error getting days:", error);
+    res.status(500).json({ error: "Günler yüklenirken hata oluştu" });
+  }
 });
 
 // Archive routes with caching
@@ -920,7 +1049,7 @@ app.get("/api/archive/:year/:month/:day", (req, res) => {
     if (fs.existsSync(archiveFile)) {
       data = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
     } else {
-      data = newsData.filter((article) => article.date_key === dateKey);
+      data = []; // No fallback data needed
     }
 
     // Cache the result
@@ -962,14 +1091,11 @@ app.get("/api/archive/:year/:month", (req, res) => {
     if (fs.existsSync(summaryFile)) {
       data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
     } else {
-      const monthNews = newsData.filter((article) =>
-        article.date_key.startsWith(`${year}-${monthPadded}`)
-      );
       data = {
         year: parseInt(year),
         month: parseInt(month),
-        totalNews: monthNews.length,
-        news: monthNews,
+        totalNews: 0,
+        news: [],
       };
     }
 
@@ -1006,13 +1132,10 @@ app.get("/api/archive/:year", (req, res) => {
     if (fs.existsSync(summaryFile)) {
       data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
     } else {
-      const yearNews = newsData.filter((article) =>
-        article.date_key.startsWith(year)
-      );
       data = {
         year: parseInt(year),
-        totalNews: yearNews.length,
-        news: yearNews,
+        totalNews: 0,
+        news: [],
       };
     }
 
@@ -1054,16 +1177,24 @@ app.get("/api/dates", (req, res) => {
 
 app.get("/api/hours/:date", (req, res) => {
   const date = req.params.date;
-  const hours = [
-    ...new Set(
-      newsData
-        .filter((article) => article.date_key === date)
-        .map((article) => article.hour_key)
-    ),
-  ]
-    .sort()
-    .reverse();
-  res.json(hours);
+  
+  try {
+    const [year, month, day] = date.split("-");
+    const archiveFile = path.join(ARCHIVES_DIR, year, month, `${date}.json`);
+    
+    let hours = [];
+    if (fs.existsSync(archiveFile)) {
+      const data = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
+      hours = [...new Set(data.map((article) => article.hour_key))]
+        .sort()
+        .reverse();
+    }
+    
+    res.json(hours);
+  } catch (error) {
+    console.error("Error getting hours:", error);
+    res.status(500).json({ error: "Saatler yüklenirken hata oluştu" });
+  }
 });
 
 // Manual fetch trigger
@@ -1072,7 +1203,7 @@ app.post("/api/fetch", async (req, res) => {
     await fetchNews();
     res.json({
       message: "Haberler başarıyla güncellendi",
-      total: newsData.length,
+      total: todayNews.length,
       lastUpdate: lastUpdate.toISOString(),
       cacheStatus: {
         todayCache: cache.todayNews.key,
@@ -1130,19 +1261,41 @@ app.get("/api/feeds", (req, res) => {
 app.get("/api/stats", (req, res) => {
   const metadata = getMetadataFromCache();
 
+  // Calculate total news from summary files
+  let totalNews = 0;
   let firstNews = null;
   let latestNews = null;
 
-  if (newsData.length > 0) {
-    const sortedByCreated = [...newsData].sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
-    );
-    firstNews = sortedByCreated[0].created_at;
-    latestNews = sortedByCreated[sortedByCreated.length - 1].created_at;
+  try {
+    if (fs.existsSync(ARCHIVES_DIR)) {
+      const yearDirs = fs.readdirSync(ARCHIVES_DIR)
+        .filter(dir => fs.statSync(path.join(ARCHIVES_DIR, dir)).isDirectory());
+
+      yearDirs.forEach(year => {
+        const yearDir = path.join(ARCHIVES_DIR, year);
+        const monthDirs = fs.readdirSync(yearDir)
+          .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory());
+
+        monthDirs.forEach(month => {
+          const monthDir = path.join(yearDir, month);
+          const summaryFile = path.join(monthDir, "summary.json");
+          if (fs.existsSync(summaryFile)) {
+            try {
+              const summary = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+              totalNews += summary.totalNews || 0;
+            } catch (error) {
+              console.warn(`Error reading summary file: ${summaryFile}`, error);
+            }
+          }
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Error calculating total news:", error);
   }
 
   res.json({
-    total_news: newsData.length,
+    total_news: totalNews,
     total_sources: metadata.sources?.length || 0,
     total_days: metadata.dates?.length || 0,
     first_news: firstNews,
@@ -1252,19 +1405,9 @@ app.get("/api/sitemap.xml", (req, res) => {
     // Yıllar (/2025, /2024, etc.)
     if (metadata.years) {
       metadata.years.forEach((year) => {
-        const yearNews = newsData.filter((article) =>
-          article.date_key.startsWith(year)
-        );
-        const yearLastMod =
-          yearNews.length > 0
-            ? new Date(Math.max(...yearNews.map((n) => new Date(n.created_at))))
-                .toISOString()
-                .split("T")[0]
-            : currentDate;
-
         sitemap += `  <url>
     <loc>https://saatdakika.com/${year}</loc>
-    <lastmod>${yearLastMod}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1273,170 +1416,101 @@ app.get("/api/sitemap.xml", (req, res) => {
         // Aylar (/2025/08, /2025/07, etc.) - sadece son 2 yıl için
         const currentYear = new Date().getFullYear();
         if (parseInt(year) >= currentYear - 1) {
-          const months = [
-            ...new Set(
-              newsData
-                .filter((article) => article.date_key.startsWith(year))
-                .map((article) => article.date_key.split("-")[1])
-            ),
-          ]
-            .sort()
-            .reverse();
+          const yearDir = path.join(ARCHIVES_DIR, year);
+          if (fs.existsSync(yearDir)) {
+            const months = fs.readdirSync(yearDir)
+              .filter(dir => fs.statSync(path.join(yearDir, dir)).isDirectory())
+              .sort()
+              .reverse();
 
-          months.forEach((month) => {
-            const monthKey = `${year}-${month}`;
-            const monthNews = newsData.filter((article) =>
-              article.date_key.startsWith(monthKey)
-            );
-            const monthLastMod =
-              monthNews.length > 0
-                ? new Date(
-                    Math.max(...monthNews.map((n) => new Date(n.created_at)))
-                  )
-                    .toISOString()
-                    .split("T")[0]
-                : currentDate;
-
-            sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month.padStart(2, "0")}</loc>
-    <lastmod>${monthLastMod}</lastmod>
+            months.forEach((month) => {
+              sitemap += `  <url>
+    <loc>https://saatdakika.com/${year}/${month}</loc>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 `;
 
-            // Günler (/2025/08/15, /2025/08/14, etc.) - sadece son 3 ay için
-            const now = new Date();
-            const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-            const monthsAgo =
-              (now.getFullYear() - monthDate.getFullYear()) * 12 +
-              (now.getMonth() - monthDate.getMonth());
+              // Günler (/2025/08/15, /2025/08/14, etc.) - sadece son 3 ay için
+              const now = new Date();
+              const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+              const monthsAgo =
+                (now.getFullYear() - monthDate.getFullYear()) * 12 +
+                (now.getMonth() - monthDate.getMonth());
 
-            if (monthsAgo <= 3) {
-              const days = [
-                ...new Set(
-                  newsData
-                    .filter((article) => article.date_key.startsWith(monthKey))
-                    .map((article) => article.date_key.split("-")[2])
-                ),
-              ]
-                .sort()
-                .reverse();
+              if (monthsAgo <= 3) {
+                const monthDir = path.join(yearDir, month);
+                if (fs.existsSync(monthDir)) {
+                  const days = fs.readdirSync(monthDir)
+                    .filter(file => file.endsWith('.json') && file !== 'summary.json')
+                    .map(file => file.replace('.json', ''))
+                    .sort()
+                    .reverse();
 
-              days.forEach((day) => {
-                const dateKey = `${year}-${month.padStart(
-                  2,
-                  "0"
-                )}-${day.padStart(2, "0")}`;
-                const dayNews = newsData.filter(
-                  (article) => article.date_key === dateKey
-                );
-                const dayLastMod =
-                  dayNews.length > 0
-                    ? new Date(
-                        Math.max(...dayNews.map((n) => new Date(n.created_at)))
-                      )
-                        .toISOString()
-                        .split("T")[0]
-                    : currentDate;
-
-                // Ana günlük sayfa
-                sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month.padStart(
-                  2,
-                  "0"
-                )}/${day.padStart(2, "0")}</loc>
-    <lastmod>${dayLastMod}</lastmod>
+                  days.forEach((day) => {
+                    // Ana günlük sayfa
+                    sitemap += `  <url>
+    <loc>https://saatdakika.com/${year}/${month}/${day}</loc>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 `;
 
-                // Pagination sayfaları (eğer 30'dan fazla haber varsa)
-                if (dayNews.length > 30) {
-                  const totalPages = Math.ceil(dayNews.length / 30);
-                  for (let page = 2; page <= Math.min(totalPages, 10); page++) {
-                    // Max 10 sayfa
-                    sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month.padStart(
-                      2,
-                      "0"
-                    )}/${day.padStart(2, "0")}/${page}</loc>
-    <lastmod>${dayLastMod}</lastmod>
+                    // Pagination sayfaları (varsayılan olarak 2-5 sayfa ekle)
+                    for (let page = 2; page <= 5; page++) {
+                      sitemap += `  <url>
+    <loc>https://saatdakika.com/${year}/${month}/${day}/${page}</loc>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.7</priority>
   </url>
 `;
-                  }
+                    }
+                  });
                 }
-              });
-            }
-          });
+              }
+            });
+          }
         }
       });
     }
 
     // Kaynak bazlı URL'ler (/source/sabah-gazetesi/2025/08/15)
-    // Sadece son 30 güne ait ve popüler kaynaklar için
-    const last30Days = new Date();
-    last30Days.setDate(last30Days.getDate() - 30);
-    const last30DaysKey = getDateKey(last30Days);
-
-    const sources = [...new Set(newsData.map((article) => article.source))];
-    const popularSources = sources.slice(0, 10); // İlk 10 kaynak
+    // Sadece son 7 güne ait ve popüler kaynaklar için
+    const popularSources = feeds.slice(0, 10).map(feed => feed.name); // İlk 10 kaynak
 
     popularSources.forEach((source) => {
       const sourceSlug = createTurkishSlug(source);
 
-      // Son 30 gündeki bu kaynağın haberlerini al
-      const sourceNews = newsData.filter(
-        (article) =>
-          article.source === source && article.date_key >= last30DaysKey
-      );
-
-      // Tarihleri grupla
-      const sourceDates = [
-        ...new Set(sourceNews.map((article) => article.date_key)),
-      ]
-        .sort()
-        .reverse();
-
       // Son 7 günü ekle
-      sourceDates.slice(0, 7).forEach((dateKey) => {
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = getDateKey(date);
         const [year, month, day] = dateKey.split("-");
-        const dateNews = sourceNews.filter(
-          (article) => article.date_key === dateKey
-        );
-        const dateLastMod =
-          dateNews.length > 0
-            ? new Date(Math.max(...dateNews.map((n) => new Date(n.created_at))))
-                .toISOString()
-                .split("T")[0]
-            : currentDate;
 
         sitemap += `  <url>
     <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}</loc>
-    <lastmod>${dateLastMod}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
   </url>
 `;
 
-        // Kaynak pagination (eğer 30'dan fazla haber varsa)
-        if (dateNews.length > 30) {
-          const totalPages = Math.ceil(dateNews.length / 30);
-          for (let page = 2; page <= Math.min(totalPages, 5); page++) {
-            // Max 5 sayfa
-            sitemap += `  <url>
+        // Kaynak pagination (varsayılan olarak 2-3 sayfa ekle)
+        for (let page = 2; page <= 3; page++) {
+          sitemap += `  <url>
     <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}/${page}</loc>
-    <lastmod>${dateLastMod}</lastmod>
+    <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.6</priority>
   </url>
 `;
-          }
         }
-      });
+      }
     });
 
     sitemap += `</urlset>`;
@@ -1455,13 +1529,8 @@ app.get("/api/sitemap.xml", (req, res) => {
 });
 
 // Initialize data loading
-loadNewsData();
+loadTodayNews(); // Load today's news from archive files
 loadRSSFeeds(); // Load feeds on startup
-
-// Generate initial archives if data exists
-if (newsData.length > 0) {
-  generateHierarchicalArchives();
-}
 
 // Schedule RSS fetching every 5 minutes
 cron.schedule("*/5 * * * *", () => {
@@ -1523,3 +1592,4 @@ app.listen(PORT, () => {
   console.log("🧠 Smart cache system aktif");
   console.log("⚡ Performance monitoring: /api/cache-status");
 });
+
