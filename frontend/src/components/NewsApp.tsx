@@ -641,6 +641,24 @@ export default function NewsApp({
     return filters.join(" • ");
   };
 
+  // Büyük sayıları kısaltarak göster (örn: 5,2 B, 3,1 Mn)
+  const formatCompactNumber = (value: number) => {
+    try {
+      return new Intl.NumberFormat('tr-TR', {
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1
+      }).format(value);
+    } catch {
+      // Fallback
+      if (value >= 1_000_000_000_000) return `${(value / 1_000_000_000_000).toFixed(1)} Tn`;
+      if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)} Mr`; // Milyar
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)} Mn`; // Milyon
+      if (value >= 1_000) return `${(value / 1_000).toFixed(1)} B`; // Bin
+      return `${value}`;
+    }
+  };
+
   // Arama sonuçlarını vurgulamalı gösterme fonksiyonu
   const highlightSearchTerm = (text: string, searchTerm: string) => {
     if (!searchTerm || !text) return text;
@@ -1034,6 +1052,15 @@ export default function NewsApp({
               </h1>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
+              {stats && stats.total_news && stats.total_news > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs md:text-sm hidden sm:flex"
+                >
+                  {formatCompactNumber(stats.total_news)} Haber
+                </Badge>
+              )}
+
               <Button
                 onClick={() => fetchNews(1)}
                 disabled={loading}
@@ -1047,15 +1074,6 @@ export default function NewsApp({
                 )}
                 <span className="hidden sm:inline">Güncelle</span>
               </Button>
-
-              {stats && stats.total_news && stats.total_news > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs md:text-sm hidden sm:flex"
-                >
-                  {stats.total_news} Haber
-                </Badge>
-              )}
             </div>
           </div>
         </div>
