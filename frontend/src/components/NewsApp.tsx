@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -512,7 +512,6 @@ export default function NewsApp({
     if (newsCount < 8) return []; // Çok az haber varsa reklam gösterme
     
     const positions: number[] = [];
-    const maxAds = 2; // 2 adet Yandex reklamı
     const minGap = 4; // Reklamlar arası minimum boşluk
     
     // İlk reklam için pozisyon (3-6 arası)
@@ -608,104 +607,7 @@ export default function NewsApp({
     );
   };
 
-  // Production reklam component'i - Basitleştirilmiş versiyon
-  const ProductionAdCard = () => {
-    const [adLoaded, setAdLoaded] = useState(false);
-    const [adError, setAdError] = useState(false);
-    const adContainerRef = useRef<HTMLDivElement>(null);
-    const adInitializedRef = useRef(false);
 
-    useEffect(() => {
-      // Check if AdSense is properly configured
-      if (!process.env.NEXT_PUBLIC_ADSENSE_CLIENT || !process.env.NEXT_PUBLIC_ADSENSE_SLOT) {
-        setAdError(true);
-        return;
-      }
-
-      // Prevent duplicate initialization
-      if (adInitializedRef.current) return;
-      adInitializedRef.current = true;
-
-      const initializeAd = () => {
-        if (!adContainerRef.current || typeof window === "undefined" || !(window as any).adsbygoogle) {
-          return;
-        }
-
-        try {
-          // Clear container and create new ad element
-          adContainerRef.current.innerHTML = '';
-          
-          const adElement = document.createElement('ins');
-          adElement.className = 'adsbygoogle';
-          adElement.style.display = 'block';
-          adElement.setAttribute('data-ad-client', process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '');
-          adElement.setAttribute('data-ad-slot', process.env.NEXT_PUBLIC_ADSENSE_SLOT || '');
-          adElement.setAttribute('data-ad-format', 'auto');
-          adElement.setAttribute('data-full-width-responsive', 'true');
-          
-          adContainerRef.current.appendChild(adElement);
-          
-          // Push ad after DOM settles
-          setTimeout(() => {
-            try {
-              (window as any).adsbygoogle.push({});
-              setAdLoaded(true);
-            } catch (err) {
-              console.warn("AdSense push failed:", err);
-              setAdError(true);
-            }
-          }, 100);
-        } catch (err) {
-          console.warn("AdSense initialization failed:", err);
-          setAdError(true);
-        }
-      };
-
-      // Wait for AdSense to be ready
-      if ((window as any).adsbygoogle) {
-        setTimeout(initializeAd, 500);
-      } else {
-        const checkInterval = setInterval(() => {
-          if ((window as any).adsbygoogle) {
-            clearInterval(checkInterval);
-            initializeAd();
-          }
-        }, 1000);
-        
-        // Timeout after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          setAdError(true);
-        }, 10000);
-      }
-    }, []);
-
-    if (adError) {
-      return (
-        <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border flex items-center justify-center">
-          <div className="text-center p-4">
-            <div className="text-gray-500 text-sm mb-2">Reklam yüklenemedi</div>
-            <Badge className="bg-blue-600 text-white text-xs">Teknik Sorun</Badge>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
-        <div
-          ref={adContainerRef}
-          className="w-full h-full"
-          style={{ backgroundColor: "#f5f5f5", minHeight: "80px" }}
-        />
-        <div className="absolute top-2 right-2">
-          <Badge className="bg-blue-600 text-white text-xs">
-            {adLoaded ? "REKLAM" : "YÜKLENİYOR..."}
-          </Badge>
-        </div>
-      </div>
-    );
-  };
 
   // Yandex reklam component'i
   const YandexAdCard = ({ onError, adIndex }: { onError?: () => void; adIndex?: number }) => {
@@ -713,8 +615,9 @@ export default function NewsApp({
     const [adError, setAdError] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     
-    // Her reklam için benzersiz ID oluştur
-    const uniqueId = `yandex_rtb_R-A-17002789-${adIndex || Math.random().toString(36).substr(2, 9)}`;
+    // Her reklam için sabit ID oluştur - sadece 1 ve 2 kullan
+    const adNumber = adIndex !== undefined ? (adPositions.indexOf(adIndex) + 1) : 1;
+    const uniqueId = `yandex_rtb_R-A-17002789-${adNumber}`;
 
     useEffect(() => {
       // Mobil cihaz kontrolü
@@ -877,38 +780,7 @@ export default function NewsApp({
     return null;
   };
 
-  // Ana reklam component'i (environment'a göre production seçer)
-  const AdCard = ({ adType }: { adType: string }) => {
-    const [isProduction, setIsProduction] = useState(false);
-    const [yandexFailed, setYandexFailed] = useState(false);
 
-    useEffect(() => {
-      // Environment kontrolü
-      const env = process.env.NEXT_PUBLIC_ENVIRONMENT;
-      setIsProduction(env === "production");
-    }, []);
-
-    // Safety check for adType
-    if (!adType || typeof adType !== "string") {
-      return null;
-    }
-
-    // Production mode'da reklam türüne göre göster
-    if (isProduction) {
-      if (adType === "google") {
-        return <ProductionAdCard />;
-      } else if (adType === "yandex") {
-        // Yandex başarısız olursa Google AdSense'e geç
-        if (yandexFailed) {
-          return <ProductionAdCard />;
-        }
-        return <YandexAdCard onError={() => setYandexFailed(true)} />;
-      }
-    }
-
-    // Development mode'da reklam gösterme
-    return null;
-  };
 
      useEffect(() => {
      // İlk yüklemede sadece metadata'ları çek
