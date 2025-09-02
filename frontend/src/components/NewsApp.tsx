@@ -1504,7 +1504,7 @@ export default function NewsApp({
                               Detaylı Oku
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] xl:max-w-[90vw] 2xl:max-w-[85vh] overflow-hidden p-0">
+                          <DialogContent className="max-w-[98vw] max-h-[95vh] w-[98vw] h-[90vh] overflow-hidden p-0 sm:w-[95vw] sm:h-[85vh] md:w-[92vw] md:h-[80vh] lg:w-[88vw] lg:h-[85vh] xl:w-[85vw] xl:h-[85vh]">
                             <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
                                 <Badge variant="outline" className="text-xs sm:text-sm w-fit">
@@ -1539,7 +1539,7 @@ export default function NewsApp({
                               </div>
 
                               {/* Iframe ile haber kaynağını göster */}
-                              <div className="relative w-full h-[70vh] sm:h-[75vh] lg:h-[80vh] xl:h-[85vh] border rounded-lg overflow-hidden">
+                              <div className="relative w-full h-[calc(90vh-180px)] sm:h-[calc(85vh-180px)] md:h-[calc(80vh-180px)] lg:h-[calc(85vh-180px)] border rounded-lg overflow-hidden">
                                 {article.id && iframeErrorStates[article.id] === true ? (
                                   /* Error fallback */
                                   <div className="w-full h-full bg-gray-50 flex items-center justify-center">
