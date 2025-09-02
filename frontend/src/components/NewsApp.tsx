@@ -39,6 +39,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { decodeHtmlEntitiesServer } from "@/lib/utils";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001/api";
@@ -100,6 +101,7 @@ export default function NewsApp({
   const [sourceSearch, setSourceSearch] = useState<string>("");
   const [iframeLoadingStates, setIframeLoadingStates] = useState<{ [key: string]: boolean }>({});
   const [iframeErrorStates, setIframeErrorStates] = useState<{ [key: string]: boolean }>({});
+  const [adPositions, setAdPositions] = useState<number[]>([]); // Yandex reklam pozisyonları
 
 
 
@@ -398,6 +400,12 @@ export default function NewsApp({
         total: 1,
         count: 0
       });
+      
+      // Haberler yüklendikten sonra reklam pozisyonlarını oluştur
+      if (data.news && data.news.length > 0) {
+        const newAdPositions = generateAdPositions(data.news.length);
+        setAdPositions(newAdPositions);
+      }
     } catch (error) {
       console.error("Error fetching news:", error);
       setNews([]);
@@ -406,6 +414,7 @@ export default function NewsApp({
         total: 1,
         count: 0
       });
+      setAdPositions([]);
     }
     setLoading(false);
   };
@@ -498,7 +507,28 @@ export default function NewsApp({
     }
   };
 
-
+  // Random reklam pozisyonları oluştur - Sadece 2 adet
+  const generateAdPositions = React.useCallback((newsCount: number) => {
+    if (newsCount < 8) return []; // Çok az haber varsa reklam gösterme
+    
+    const positions: number[] = [];
+    const maxAds = 2; // 2 adet Yandex reklamı
+    const minGap = 4; // Reklamlar arası minimum boşluk
+    
+    // İlk reklam için pozisyon (3-6 arası)
+    const firstAd = Math.floor(Math.random() * 4) + 3;
+    positions.push(firstAd);
+    
+    // İkinci reklam için pozisyon (ilk reklamdan sonra minGap kadar uzak)
+    const secondStart = firstAd + minGap;
+    const secondEnd = newsCount - 3;
+    if (secondEnd >= secondStart) {
+      const secondAd = Math.floor(Math.random() * (secondEnd - secondStart + 1)) + secondStart;
+      positions.push(secondAd);
+    }
+    
+    return positions;
+  }, []);
 
   // Utility functions
   const formatDate = (dateString: string) => {
@@ -678,10 +708,13 @@ export default function NewsApp({
   };
 
   // Yandex reklam component'i
-  const YandexAdCard = ({ onError }: { onError?: () => void }) => {
+  const YandexAdCard = ({ onError, adIndex }: { onError?: () => void; adIndex?: number }) => {
     const [adLoaded, setAdLoaded] = useState(false);
     const [adError, setAdError] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    
+    // Her reklam için benzersiz ID oluştur
+    const uniqueId = `yandex_rtb_R-A-17002789-${adIndex || Math.random().toString(36).substr(2, 9)}`;
 
     useEffect(() => {
       // Mobil cihaz kontrolü
@@ -695,37 +728,43 @@ export default function NewsApp({
       checkMobile();
       window.addEventListener('resize', checkMobile);
 
-      // Yandex RTB script'ini yükle
+      // Basit Yandex script yükleme
       const loadYandexScript = () => {
         if (typeof window === "undefined") return;
 
-        // Check if Yandex script is already loaded
+        // Eğer Yandex zaten yüklü ise direkt initialize et
         if ((window as any).Ya && (window as any).Ya.Context) {
-          initializeYandexAd();
+          // DOM hazır olana kadar bekle
+          setTimeout(() => initializeYandexAd(), 500);
           return;
         }
 
-        // Load Yandex RTB script
+        // Script zaten var mı kontrol et
+        const existingScript = document.querySelector('script[src="https://yandex.ru/ads/system/context.js"]');
+        if (existingScript) {
+          // Biraz bekle ve initialize et
+          setTimeout(() => initializeYandexAd(), 1000);
+          return;
+        }
+
+        // Yeni script yükle
         const script = document.createElement('script');
         script.src = 'https://yandex.ru/ads/system/context.js';
         script.async = true;
-        script.defer = true; // Mobil için defer ekle
         script.onload = () => {
-          // Initialize yaContextCb if it doesn't exist
           if (!(window as any).yaContextCb) {
             (window as any).yaContextCb = [];
           }
 
-          // Add our callback to the queue
           (window as any).yaContextCb.push(() => {
-            // Mobil için kısa gecikme ekle
+            // DOM'un hazır olduğundan emin olmak için gecikme
             setTimeout(() => {
               initializeYandexAd();
-            }, isMobile ? 100 : 0);
+            }, 800);
           });
         };
         script.onerror = () => {
-          console.error("Yandex RTB script yüklenemedi");
+          console.warn("Yandex RTB script yüklenemedi");
           setAdError(true);
           onError?.();
         };
@@ -735,20 +774,27 @@ export default function NewsApp({
 
       const initializeYandexAd = () => {
         try {
+          // DOM element'inin hazır olduğundan emin ol
+          const containerElement = document.getElementById(uniqueId);
+          if (!containerElement) {
+            console.warn(`Container element with id "${uniqueId}" not found, skipping...`);
+            setAdError(true);
+            return;
+          }
+
+          // Container zaten içerik varsa, tekrar initialize etme
+          if (containerElement.children.length > 0 || containerElement.innerHTML.trim() !== '') {
+            console.log(`Container ${uniqueId} already has content, skipping...`);
+            setAdLoaded(true);
+            return;
+          }
+
           if ((window as any).Ya && (window as any).Ya.Context && (window as any).Ya.Context.AdvManager) {
-            // Mobil cihazlarda farklı reklam boyutu kullan
+            // Basit reklam konfigürasyonu
             const adConfig: any = {
               "blockId": "R-A-17002789-1",
-              "renderTo": "yandex_rtb_R-A-17002789-1"
+              "renderTo": uniqueId
             };
-
-            // Mobil cihazlarda ek mobil optimizasyonu
-            if (isMobile) {
-              adConfig["type"] = "banner";
-              adConfig["format"] = "auto";
-              adConfig["size"] = "320x50"; // Mobil için sabit boyut
-              adConfig["mobile"] = true; // Mobil flag'i ekle
-            }
 
             (window as any).Ya.Context.AdvManager.render(adConfig);
             setAdLoaded(true);
@@ -757,7 +803,7 @@ export default function NewsApp({
             setAdError(true);
           }
         } catch (err) {
-          console.error("Yandex ad initialization error:", err);
+          console.warn("Yandex ad initialization error:", err);
           setAdError(true);
         }
       };
@@ -766,13 +812,18 @@ export default function NewsApp({
 
       return () => {
         window.removeEventListener('resize', checkMobile);
+        // Basit cleanup
+        const container = document.getElementById(uniqueId);
+        if (container) {
+          container.innerHTML = '';
+        }
       };
     }, [onError, isMobile]);
 
     // If there's an error, show a fallback
     if (adError) {
       return (
-        <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
+        <div className="h-full bg-gray-100 rounded-lg border flex items-center justify-center shadow-sm">
           <div className="text-center p-4">
             <div className="text-gray-500 text-sm mb-2">
               Yandex reklam yüklenemedi
@@ -789,16 +840,17 @@ export default function NewsApp({
     }
 
     return (
-      <div className="w-full h-32 sm:h-40 md:h-48 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
-        {/* Yandex RTB container */}
+      <div className="h-full bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm flex flex-col">
+        {/* Yandex RTB container - haber kartı yüksekliğinde */}
         <div
-          id="yandex_rtb_R-A-17002789-1"
-          className="w-full h-full"
+          id={uniqueId}
+          className="w-full flex-1"
           style={{
             backgroundColor: "#f5f5f5",
-            minHeight: "128px", // 32 * 4 = 128px (h-32)
+            minHeight: "200px", // Haber kartları ile uyumlu minimum yükseklik
             display: "flex",
-            alignItems: "flex-start" // Üstten başla, ortalama yapma
+            alignItems: "center",
+            justifyContent: "center"
           }}
         />
 
@@ -812,32 +864,18 @@ export default function NewsApp({
     );
   };
 
-     // Reklam gösterim mantığı - Sadece Yandex
-   const shouldShowAd = (index: number) => {
-     // Sayfada sadece 1 reklam göster: Yandex
-     const totalNews = news.length;
-     if (totalNews === 0) return false;
-     
-     // Random pozisyon için seed kullan (sayfa yenilendiğinde farklı olur)
-     const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
-     const randomPosition = (seed * 9301 + 49297) % totalNews;
-     
-     return index === randomPosition;
-   };
+       // Reklam gösterim mantığı - 4 adet Yandex reklamını random pozisyonlara yerleştir
+  const shouldShowAd = (index: number) => {
+    return adPositions.includes(index);
+  };
 
-   // Hangi reklam türünü göstereceğini belirle - Sadece Yandex
-   const getAdType = (index: number) => {
-     // Sayfada sadece 1 reklam göster: Yandex
-     const totalNews = news.length;
-     if (totalNews === 0) return null;
-     
-     // Random pozisyon için seed kullan (sayfa yenilendiğinde farklı olur)
-     const seed = Math.floor(Date.now() / 60000); // Her dakika farklı
-     const randomPosition = (seed * 9301 + 49297) % totalNews;
-     
-     if (index === randomPosition) return "yandex";
-     return null;
-   };
+  // Hangi reklam türünü göstereceğini belirle - artık sadece Yandex
+  const getAdType = (index: number) => {
+    if (adPositions.includes(index)) {
+      return "yandex";
+    }
+    return null;
+  };
 
   // Ana reklam component'i (environment'a göre production seçer)
   const AdCard = ({ adType }: { adType: string }) => {
@@ -879,7 +917,7 @@ export default function NewsApp({
      fetchStats();
      // fetchNews burada YOK - props useEffect'i çekecek
 
-     // Google AdSense Banner'ı initialize et
+     // Google AdSense Banner'ı initialize et (üst)
      if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
        const initializeGoogleBanner = () => {
          if ((window as any).adsbygoogle) {
@@ -912,9 +950,13 @@ export default function NewsApp({
          }
        };
 
+
+
        // Wait for AdSense to be ready
        if ((window as any).adsbygoogle) {
-         setTimeout(initializeGoogleBanner, 500);
+         setTimeout(() => {
+           initializeGoogleBanner();
+         }, 500);
        } else {
          const checkInterval = setInterval(() => {
            if ((window as any).adsbygoogle) {
@@ -986,6 +1028,16 @@ export default function NewsApp({
     // Direkt fetch et - timeout yok
     fetchNews(safePage);
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage]);
+
+  // Sayfa yenilendiğinde ve ekran boyutu değiştiğinde reklam pozisyonlarını yeniden oluştur
+  useEffect(() => {
+    if (news && news.length > 0) {
+      const newAdPositions = generateAdPositions(news.length);
+      setAdPositions(newAdPositions);
+    }
+  }, [news, generateAdPositions]);
+
+
 
   // Loading state
   if (loading && (!news || news.length === 0)) {
@@ -1346,28 +1398,37 @@ export default function NewsApp({
          ) : (
            <>
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
-              {news && news.length > 0 && news
-                                .map((article, index) => {
-                  // Safety check for article object
-                  if (!article || !article.id) {
-                    return null;
-                  }
-                  
-                  const items = [];
-
-                  // Add the news card
-                  items.push(
-                    <Card
-                      key={article.id}
-                      className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden"
-                    >
+                             {news && news.length > 0 && news
+                 .map((article, index) => {
+                   // Safety check for article object
+                   if (!article || !article.id) {
+                     return null;
+                   }
+                   
+                   // Reklam gösterimi kontrolü
+                   if (shouldShowAd(index)) {
+                     const adType = getAdType(index);
+                     if (adType === "yandex") {
+                       return (
+                         <div key={`ad-${index}`} className="h-full">
+                           <YandexAdCard adIndex={index} />
+                         </div>
+                       );
+                     }
+                   }
+                   
+                   return (
+                     <Card
+                       key={article.id}
+                       className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden"
+                     >
                       {/* Image Section - Sadece resim varsa göster */}
                       {article.image && article.image.trim() !== "" && (
                         <div className="relative h-32 sm:h-40 md:h-48 w-full bg-gray-200">
                           {article.image && article.image.trim() !== "" && (
                             <img
                               src={article.image || ""}
-                              alt={article.title || "Haber görseli"}
+                              alt={decodeHtmlEntitiesServer(article.title) || "Haber görseli"}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 // Hide image on error
@@ -1419,15 +1480,15 @@ export default function NewsApp({
                       )}
 
                                              <CardHeader className="pb-2 px-3 md:px-6">
-                         <CardTitle className="text-sm md:text-lg leading-tight">
-                           {article.title || "Başlık bulunamadı"}
-                         </CardTitle>
+                                                 <CardTitle className="text-sm md:text-lg leading-tight">
+                          {decodeHtmlEntitiesServer(article.title) || "Başlık bulunamadı"}
+                        </CardTitle>
                        </CardHeader>
 
                        <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
-                         <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
-                           {article.description || "Açıklama bulunamadı"}
-                         </CardDescription>
+                                                 <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
+                          {decodeHtmlEntitiesServer(article.description) || "Açıklama bulunamadı"}
+                        </CardDescription>
 
                         <Dialog onOpenChange={(open) => {
                           if (open && article.id) {
@@ -1455,7 +1516,7 @@ export default function NewsApp({
                                 </div>
                               </div>
                               <DialogTitle className="text-lg sm:text-xl leading-tight">
-                                {article.title || "Başlık bulunamadı"}
+                                {decodeHtmlEntitiesServer(article.title) || "Başlık bulunamadı"}
                               </DialogTitle>
                             </DialogHeader>
 
@@ -1509,7 +1570,7 @@ export default function NewsApp({
                                   <>
                                     <iframe
                                       src={article.link || "#"}
-                                      title={`${article.title || "Haber"} - ${article.source || "Kaynak"}`}
+                                      title={`${decodeHtmlEntitiesServer(article.title) || "Haber"} - ${article.source || "Kaynak"}`}
                                       className="w-full h-full"
                                       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
                                       loading="lazy"
@@ -1544,25 +1605,8 @@ export default function NewsApp({
                       </CardContent>
                     </Card>
                   );
-
-                  // Add ad card after specific news items
-                  if (shouldShowAd(index)) {
-                    const adType = getAdType(index);
-                    if (adType && adType.trim() !== "") {
-                      items.push(
-                        <Card key={`ad-${index}-${adType}`} className="h-full flex flex-col hover:shadow-lg transition-shadow overflow-hidden">
-                          <div className="h-full">
-                            <AdCard adType={adType} />
-                          </div>
-                        </Card>
-                      );
-                    }
-                  }
-
-                  return items;
                 })
-                .filter(Boolean)
-                .flat()}
+                .filter(Boolean)}
             </div>
 
 
