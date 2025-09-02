@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Search,
+  X,
 } from "lucide-react";
 import { decodeHtmlEntitiesServer } from "@/lib/utils";
 
@@ -99,6 +102,7 @@ export default function NewsApp({
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<string[]>([]);
   const [sourceSearch, setSourceSearch] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [iframeLoadingStates, setIframeLoadingStates] = useState<{ [key: string]: boolean }>({});
   const [iframeErrorStates, setIframeErrorStates] = useState<{ [key: string]: boolean }>({});
   const [adPositions, setAdPositions] = useState<number[]>([]); // Yandex reklam pozisyonları
@@ -254,9 +258,25 @@ export default function NewsApp({
     setSelectedDay(day);
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
+    setSearchQuery(""); // Arama sorgusunu temizle
 
     const url = buildUrl("all", year, month, day, 1);
     router.push(url);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1); // Arama yapılırken sayfa 1'e dön
+  };
+
+  const handleSearchSubmit = () => {
+    fetchNews(1); // Arama yapıldığında haberleri yeniden çek
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+    fetchNews(1); // Arama temizlendiğinde haberleri yeniden çek
   };
 
   const handleIframeLoad = (articleId: string) => {
@@ -322,6 +342,7 @@ export default function NewsApp({
         setSelectedDay(todayDay);
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setSearchQuery(""); // Arama sorgusunu temizle
 
         const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1);
         router.push(todayUrl);
@@ -340,6 +361,7 @@ export default function NewsApp({
         setSelectedDay(yDay);
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setSearchQuery(""); // Arama sorgusunu temizle
 
         const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1);
         router.push(yesterdayUrl);
@@ -355,6 +377,7 @@ export default function NewsApp({
         setSelectedDay("all");
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setSearchQuery(""); // Arama sorgusunu temizle
 
         const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1);
         router.push(monthUrl);
@@ -369,6 +392,7 @@ export default function NewsApp({
         setSelectedDay("all");
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setSearchQuery(""); // Arama sorgusunu temizle
 
         const yearUrl = buildUrl("all", tyYear, "all", "all", 1);
         router.push(yearUrl);
@@ -388,6 +412,7 @@ export default function NewsApp({
       if (selectedYear && selectedYear !== "all") url += `&year=${selectedYear}`;
       if (selectedMonth && selectedMonth !== "all") url += `&month=${selectedMonth}`;
       if (selectedDay && selectedDay !== "all") url += `&day=${selectedDay}`;
+      if (searchQuery && searchQuery.trim() !== "") url += `&search=${encodeURIComponent(searchQuery.trim())}`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -564,7 +589,29 @@ export default function NewsApp({
       }
       filters.push(dateFilter);
     }
+    if (searchQuery && searchQuery.trim() !== "") {
+      filters.push(`"${searchQuery.trim()}"`);
+    }
     return filters.join(" • ");
+  };
+
+  // Arama sonuçlarını vurgulamalı gösterme fonksiyonu
+  const highlightSearchTerm = (text: string, searchTerm: string) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <mark key={index} className="bg-yellow-200 px-1 rounded">
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
   };
 
 
@@ -969,6 +1016,50 @@ export default function NewsApp({
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
+        {/* Search Bar */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex items-center space-x-2 mb-2">
+            <Search className="h-5 w-5 text-gray-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Arama</h2>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Başlık, açıklama veya kaynak adında ara..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit();
+                  }
+                }}
+                className="pr-8"
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              onClick={handleSearchSubmit}
+              disabled={loading}
+              className="flex items-center space-x-2 min-w-fit"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              <span>Ara</span>
+            </Button>
+          </div>
+        </div>
+
         {/* Enhanced Filters */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -1314,10 +1405,16 @@ export default function NewsApp({
                           <div className="absolute top-2 left-2">
                             <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
                               <span className="block sm:hidden">
-                                {(article.source || "Kaynak").split(" ")[0]}
+                                {searchQuery && searchQuery.trim() !== "" 
+                                  ? highlightSearchTerm((article.source || "Kaynak").split(" ")[0], searchQuery.trim())
+                                  : (article.source || "Kaynak").split(" ")[0]
+                                }
                               </span>
                               <span className="hidden sm:block">
-                                {article.source || "Kaynak"}
+                                {searchQuery && searchQuery.trim() !== "" 
+                                  ? highlightSearchTerm(article.source || "Kaynak", searchQuery.trim())
+                                  : article.source || "Kaynak"
+                                }
                               </span>
                             </Badge>
                             </div>
@@ -1337,10 +1434,16 @@ export default function NewsApp({
                         <div className="relative pt-2 px-3 md:px-6 flex items-center justify-between">
                           <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
                             <span className="block sm:hidden">
-                              {(article.source || "Kaynak").split(" ")[0]}
+                              {searchQuery && searchQuery.trim() !== "" 
+                                ? highlightSearchTerm((article.source || "Kaynak").split(" ")[0], searchQuery.trim())
+                                : (article.source || "Kaynak").split(" ")[0]
+                              }
                             </span>
                             <span className="hidden sm:block">
-                              {article.source || "Kaynak"}
+                              {searchQuery && searchQuery.trim() !== "" 
+                                ? highlightSearchTerm(article.source || "Kaynak", searchQuery.trim())
+                                : article.source || "Kaynak"
+                              }
                             </span>
                           </Badge>
 
@@ -1353,13 +1456,19 @@ export default function NewsApp({
 
                                              <CardHeader className="pb-2 px-3 md:px-6">
                                                  <CardTitle className="text-sm md:text-lg leading-tight">
-                          {decodeHtmlEntitiesServer(article.title) || "Başlık bulunamadı"}
+                          {searchQuery && searchQuery.trim() !== "" 
+                            ? highlightSearchTerm(decodeHtmlEntitiesServer(article.title) || "Başlık bulunamadı", searchQuery.trim())
+                            : decodeHtmlEntitiesServer(article.title) || "Başlık bulunamadı"
+                          }
                         </CardTitle>
                        </CardHeader>
 
                        <CardContent className="flex-1 flex flex-col pt-0 px-3 md:px-6">
                                                  <CardDescription className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
-                          {decodeHtmlEntitiesServer(article.description) || "Açıklama bulunamadı"}
+                          {searchQuery && searchQuery.trim() !== "" 
+                            ? highlightSearchTerm(decodeHtmlEntitiesServer(article.description) || "Açıklama bulunamadı", searchQuery.trim())
+                            : decodeHtmlEntitiesServer(article.description) || "Açıklama bulunamadı"
+                          }
                         </CardDescription>
 
                         <Dialog onOpenChange={(open) => {

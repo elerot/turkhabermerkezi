@@ -288,10 +288,13 @@ function generateCacheKey(req) {
     day,
     date,
     hour,
+    search,
+    q,
   } = req.query;
+  const searchQuery = search || q || "all";
   return `api_${page}_${limit}_${source || "all"}_${year || "all"}_${
     month || "all"
-  }_${day || "all"}_${date || "all"}_${hour || "all"}`;
+  }_${day || "all"}_${date || "all"}_${hour || "all"}_${searchQuery}`;
 }
 
 // Check if cache is valid
@@ -795,6 +798,26 @@ app.get("/api/news", (req, res) => {
 
   if (hour && hour !== "all") {
     filteredNews = filteredNews.filter((article) => article.hour_key === hour);
+  }
+
+  // Text search functionality - search in title and description
+  const { search, q } = req.query;
+  const searchQuery = search || q; // Support both 'search' and 'q' parameters
+  
+  if (searchQuery && searchQuery.trim() !== "") {
+    const searchTerm = searchQuery.trim().toLowerCase();
+    filteredNews = filteredNews.filter((article) => {
+      // Search in title
+      const titleMatch = article.title && article.title.toLowerCase().includes(searchTerm);
+      
+      // Search in description
+      const descriptionMatch = article.description && article.description.toLowerCase().includes(searchTerm);
+      
+      // Search in source name
+      const sourceMatch = article.source && article.source.toLowerCase().includes(searchTerm);
+      
+      return titleMatch || descriptionMatch || sourceMatch;
+    });
   }
 
   const totalCount = filteredNews.length;

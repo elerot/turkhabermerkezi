@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import CookieConsent from "@/components/CookieConsent";
+import YandexMetrikaScript from "@/components/YandexMetrikaScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +43,14 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments)}
             gtag('js', new Date());
 
+            // Varsayılan olarak çerezleri reddet (kullanıcı onayına kadar)
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied'
+            });
+
             gtag('config', 'G-HV62F5XDP1');
           `}
         </script>
@@ -73,6 +83,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <CookieConsent />
+        <YandexMetrikaScript />
       </body>
     </html>
   );
