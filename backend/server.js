@@ -111,6 +111,8 @@ const cache = {
     data: null,
     lastUpdate: null,
     key: null, // today's date key for validation
+    hits: 0,
+    misses: 0,
   },
 
   // API responses cache
@@ -312,12 +314,14 @@ function getTodayNewsFromCache() {
     cache.todayNews.key === todayKey &&
     isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL)
   ) {
-    console.log("📦 Cache HIT: Today news from cache");
+    cache.todayNews.hits++;
+    console.log(`📦 Cache HIT: Today news from cache (hits: ${cache.todayNews.hits})`);
     return cache.todayNews.data;
   }
 
   // Generate today's news from memory or archive file
-  console.log("🔄 Cache MISS: Generating today news cache");
+  cache.todayNews.misses++;
+  console.log(`🔄 Cache MISS: Generating today news cache (misses: ${cache.todayNews.misses})`);
   let todayNewsData = todayNews; // Use in-memory today's news
 
   // If no in-memory data, try to load from archive file
@@ -333,6 +337,7 @@ function getTodayNewsFromCache() {
       try {
         const data = fs.readFileSync(todayArchiveFile, "utf8");
         todayNewsData = JSON.parse(data);
+        console.log(`📁 Loaded ${todayNewsData.length} news from archive file`);
       } catch (error) {
         console.error("Error loading today's news from archive:", error);
         todayNewsData = [];
@@ -340,13 +345,16 @@ function getTodayNewsFromCache() {
     }
   }
 
-  // Update cache
+  // Update cache with fresh data
   cache.todayNews = {
-    data: todayNewsData,
+    data: [...todayNewsData], // Copy the data
     lastUpdate: Date.now(),
     key: todayKey,
+    hits: cache.todayNews.hits || 0,
+    misses: cache.todayNews.misses || 0,
   };
 
+  console.log(`📦 Today's cache updated: ${todayNewsData.length} news, key: ${todayKey}`);
   return todayNewsData;
 }
 
@@ -424,12 +432,12 @@ function getMetadataFromCache() {
 function invalidateCache() {
   console.log("🧹 Cache invalidation triggered");
 
-  // Clear today's cache (new news might be from today)
-  cache.todayNews = {
-    data: null,
-    lastUpdate: null,
-    key: null,
-  };
+  // DON'T clear today's cache - let it be updated with new data instead
+  // cache.todayNews = {
+  //   data: null,
+  //   lastUpdate: null,
+  //   key: null,
+  // };
 
   // Clear API responses cache
   cache.responses.clear();
@@ -443,7 +451,7 @@ function invalidateCache() {
   };
 
   // Keep archive cache (less likely to change)
-  console.log("✅ Cache invalidated successfully");
+  console.log("✅ Cache invalidated successfully (today's cache preserved)");
 }
 
 // Create hierarchical archive structure
@@ -566,9 +574,30 @@ function loadTodayNews() {
       todayNews = [];
       console.log("🆕 Bugün için henüz haber yok");
     }
+
+    // 🚀 Initialize cache with loaded data
+    cache.todayNews = {
+      data: [...todayNews], // Copy the data
+      lastUpdate: Date.now(),
+      key: todayKey,
+      hits: 0,
+      misses: 0,
+    };
+
+    console.log(`📦 Today's cache initialized: ${todayNews.length} news, key: ${todayKey}`);
   } catch (error) {
     console.error("❌ Bugünün haberlerini yükleme hatası:", error);
     todayNews = [];
+    
+    // Initialize empty cache
+    const todayKey = getTodayKey();
+    cache.todayNews = {
+      data: [],
+      lastUpdate: Date.now(),
+      key: todayKey,
+      hits: 0,
+      misses: 0,
+    };
   }
 }
 
@@ -766,12 +795,22 @@ async function fetchNews() {
     // Sort today's news by created_at (newest first)
     todayNews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // 🚀 INVALIDATE CACHE WHEN NEW NEWS ARRIVE
+    // 🚀 UPDATE TODAY'S CACHE WITH NEW DATA
+    const todayKey = getTodayKey();
+    cache.todayNews = {
+      data: [...todayNews], // Copy of today's news
+      lastUpdate: Date.now(),
+      key: todayKey,
+      hits: cache.todayNews.hits || 0,
+      misses: cache.todayNews.misses || 0,
+    };
+
+    // 🚀 INVALIDATE OTHER CACHES WHEN NEW NEWS ARRIVE
     invalidateCache();
 
     lastUpdate = new Date();
     console.log(
-      `✅ RSS tamamlandı. Yeni haber: ${totalNew} (bugün: ${todayNew}) - Cache invalidated`
+      `✅ RSS tamamlandı. Yeni haber: ${totalNew} (bugün: ${todayNew}) - Today's cache updated`
     );
   } else {
     console.log(`✅ RSS tamamlandı. Yeni haber: ${totalNew} - Cache preserved`);
@@ -819,11 +858,18 @@ app.get("/api/news", (req, res) => {
       const dayPadded = day.padStart(2, "0");
       const monthPadded = month.padStart(2, "0");
       const dateKey = `${year}-${monthPadded}-${dayPadded}`;
-      const archiveFile = path.join(ARCHIVES_DIR, year, monthPadded, `${dateKey}.json`);
       
-      if (fs.existsSync(archiveFile)) {
-        const data = fs.readFileSync(archiveFile, "utf8");
-        filteredNews = JSON.parse(data);
+      // If it's today's date, use cache
+      if (dateKey === getTodayKey()) {
+        filteredNews = [...getTodayNewsFromCache()];
+      } else {
+        // For other dates, load from archive file
+        const archiveFile = path.join(ARCHIVES_DIR, year, monthPadded, `${dateKey}.json`);
+        
+        if (fs.existsSync(archiveFile)) {
+          const data = fs.readFileSync(archiveFile, "utf8");
+          filteredNews = JSON.parse(data);
+        }
       }
     }
     // If specific month is requested
@@ -838,8 +884,16 @@ app.get("/api/news", (req, res) => {
           .reverse(); // Newest first
         
         for (const dayFile of dayFiles) {
-          const dayData = JSON.parse(fs.readFileSync(path.join(monthDir, dayFile), "utf8"));
-          filteredNews.push(...dayData);
+          const dateKey = dayFile.replace('.json', '');
+          
+          // If it's today's date, use cache
+          if (dateKey === getTodayKey()) {
+            filteredNews.push(...getTodayNewsFromCache());
+          } else {
+            // For other dates, load from archive file
+            const dayData = JSON.parse(fs.readFileSync(path.join(monthDir, dayFile), "utf8"));
+            filteredNews.push(...dayData);
+          }
         }
       }
     }
@@ -861,16 +915,24 @@ app.get("/api/news", (req, res) => {
             .reverse();
           
           for (const dayFile of dayFiles) {
-            const dayData = JSON.parse(fs.readFileSync(path.join(monthPath, dayFile), "utf8"));
-            filteredNews.push(...dayData);
+            const dateKey = dayFile.replace('.json', '');
+            
+            // If it's today's date, use cache
+            if (dateKey === getTodayKey()) {
+              filteredNews.push(...getTodayNewsFromCache());
+            } else {
+              // For other dates, load from archive file
+              const dayData = JSON.parse(fs.readFileSync(path.join(monthPath, dayFile), "utf8"));
+              filteredNews.push(...dayData);
+            }
           }
         }
       }
     }
     // If no specific date filters, use today's news + recent days (last 30 days)
     else {
-      // Start with today's news from memory
-      filteredNews = [...todayNews];
+      // Start with today's news from cache
+      filteredNews = [...getTodayNewsFromCache()];
       
       // Add recent days (last 30 days)
       const today = new Date();
@@ -1314,17 +1376,27 @@ app.get("/api/stats", (req, res) => {
 // Cache status endpoint (for monitoring)
 app.get("/api/cache-status", (req, res) => {
   const now = Date.now();
+  const todayKey = getTodayKey();
 
   res.json({
     cache_health: {
       today_news: {
         cached: !!cache.todayNews.data,
         key: cache.todayNews.key,
+        expected_key: todayKey,
+        key_match: cache.todayNews.key === todayKey,
         count: cache.todayNews.data ? cache.todayNews.data.length : 0,
         age_ms: cache.todayNews.lastUpdate
           ? now - cache.todayNews.lastUpdate
           : null,
         valid: isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL),
+        ttl_ms: CACHE_CONFIG.TODAY_TTL,
+        hits: cache.todayNews.hits || 0,
+        misses: cache.todayNews.misses || 0,
+        hit_rate: cache.todayNews.hits && cache.todayNews.misses 
+          ? (cache.todayNews.hits / (cache.todayNews.hits + cache.todayNews.misses) * 100).toFixed(2) + '%'
+          : '0%',
+        last_access: cache.todayNews.lastUpdate ? new Date(cache.todayNews.lastUpdate).toISOString() : null
       },
       api_responses: {
         count: cache.responses.size,
@@ -1357,7 +1429,7 @@ app.post("/api/clear-cache", (req, res) => {
         invalidateCache();
         break;
       case "today":
-        cache.todayNews = { data: null, lastUpdate: null, key: null };
+        cache.todayNews = { data: null, lastUpdate: null, key: null, hits: 0, misses: 0 };
         break;
       case "api":
         cache.responses.clear();
