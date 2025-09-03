@@ -117,6 +117,10 @@ const cache = {
 
   // API responses cache
   responses: new Map(),
+  apiStats: {
+    hits: 0,
+    misses: 0,
+  },
 
   // Archive cache
   archives: new Map(),
@@ -439,7 +443,7 @@ function invalidateCache() {
   //   key: null,
   // };
 
-  // Clear API responses cache
+  // Clear API responses cache (but keep stats)
   cache.responses.clear();
 
   // Clear metadata cache
@@ -828,14 +832,16 @@ app.get("/api/news", (req, res) => {
   if (cache.responses.has(cacheKey)) {
     const cached = cache.responses.get(cacheKey);
     if (isCacheValid(cached, CACHE_CONFIG.API_TTL)) {
-      console.log(`📦 Cache HIT: API response [${Date.now() - startTime}ms]`);
+      cache.apiStats.hits++;
+      console.log(`📦 Cache HIT: API response [${Date.now() - startTime}ms] (hits: ${cache.apiStats.hits})`);
       return res.json(cached.data);
     } else {
       cache.responses.delete(cacheKey);
     }
   }
 
-  console.log(`🔄 Cache MISS: Generating API response [${cacheKey}]`);
+  cache.apiStats.misses++;
+  console.log(`🔄 Cache MISS: Generating API response [${cacheKey}] (misses: ${cache.apiStats.misses})`);
 
   const {
     page = 1,
@@ -1401,6 +1407,12 @@ app.get("/api/cache-status", (req, res) => {
       api_responses: {
         count: cache.responses.size,
         keys: Array.from(cache.responses.keys()).slice(0, 5), // Show first 5 keys
+        hits: cache.apiStats.hits || 0,
+        misses: cache.apiStats.misses || 0,
+        hit_rate: cache.apiStats.hits && cache.apiStats.misses 
+          ? (cache.apiStats.hits / (cache.apiStats.hits + cache.apiStats.misses) * 100).toFixed(2) + '%'
+          : '0%',
+        ttl_ms: CACHE_CONFIG.API_TTL,
       },
       archives: {
         count: cache.archives.size,
@@ -1419,6 +1431,49 @@ app.get("/api/cache-status", (req, res) => {
   });
 });
 
+// Test cache behavior endpoint (for debugging)
+app.get("/api/test-cache", (req, res) => {
+  const todayKey = getTodayKey();
+  
+  res.json({
+    test_info: {
+      current_time: new Date().toISOString(),
+      today_key: todayKey,
+      cache_behavior: {
+        today_cache_exists: !!cache.todayNews.data,
+        today_cache_key: cache.todayNews.key,
+        today_cache_count: cache.todayNews.data ? cache.todayNews.data.length : 0,
+        api_cache_count: cache.responses.size,
+        api_stats: cache.apiStats,
+      },
+      memory_data: {
+        todayNews_length: todayNews.length,
+        lastUpdate: lastUpdate.toISOString(),
+      }
+    },
+    cache_status: {
+      today_news: {
+        cached: !!cache.todayNews.data,
+        key: cache.todayNews.key,
+        expected_key: todayKey,
+        key_match: cache.todayNews.key === todayKey,
+        count: cache.todayNews.data ? cache.todayNews.data.length : 0,
+        valid: isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL),
+        hits: cache.todayNews.hits || 0,
+        misses: cache.todayNews.misses || 0,
+      },
+      api_responses: {
+        count: cache.responses.size,
+        hits: cache.apiStats.hits || 0,
+        misses: cache.apiStats.misses || 0,
+        hit_rate: cache.apiStats.hits && cache.apiStats.misses 
+          ? (cache.apiStats.hits / (cache.apiStats.hits + cache.apiStats.misses) * 100).toFixed(2) + '%'
+          : '0%',
+      }
+    }
+  });
+});
+
 // Clear cache endpoint (admin)
 app.post("/api/clear-cache", (req, res) => {
   const { type } = req.body;
@@ -1433,6 +1488,7 @@ app.post("/api/clear-cache", (req, res) => {
         break;
       case "api":
         cache.responses.clear();
+        cache.apiStats = { hits: 0, misses: 0 };
         break;
       case "archives":
         cache.archives.clear();
