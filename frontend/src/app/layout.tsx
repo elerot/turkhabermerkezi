@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import CookieConsent from "@/components/CookieConsent";
 import YandexMetrikaScript from "@/components/YandexMetrikaScript";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,27 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'SaatDakika.com',
   description: 'Tüm Haber Kaynaklarının Toplanma Merkezi',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SaatDakika',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -78,6 +100,21 @@ export default function RootLayout({
           `
         }} />
         
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="SaatDakika" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="SaatDakika" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon.svg" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icon.svg" />
+        
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -85,6 +122,7 @@ export default function RootLayout({
         {children}
         <CookieConsent />
         <YandexMetrikaScript />
+        <PWAInstallPrompt />
       </body>
     </html>
   );

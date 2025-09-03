@@ -47,7 +47,7 @@ import { decodeHtmlEntitiesServer } from "@/lib/utils";
 const API_BASE = (() => {
   // Production'da veya NEXT_PUBLIC_API_BASE tanımlanmışsa onu kullan
   if (process.env.NEXT_PUBLIC_API_BASE) {
-    console.log('🔧 API_BASE from env:', process.env.NEXT_PUBLIC_API_BASE);
+    // console.log('🔧 API_BASE from env:', process.env.NEXT_PUBLIC_API_BASE);
     return process.env.NEXT_PUBLIC_API_BASE;
   }
   
@@ -60,18 +60,18 @@ const API_BASE = (() => {
     // Eğer localhost ise port 3001 kullan, değilse standard port'u kullan
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       const apiBase = `${protocol}//${hostname}:3001/api`;
-      console.log('🔧 API_BASE for localhost:', apiBase);
+      // console.log('🔧 API_BASE for localhost:', apiBase);
       return apiBase;
     } else {
       // Production domain'de ise backend'in aynı domain'de olduğunu varsay
       const apiBase = `${protocol}//${hostname}/api`;
-      console.log('🔧 API_BASE for production domain:', apiBase);
+      // console.log('🔧 API_BASE for production domain:', apiBase);
       return apiBase;
     }
   }
   
   // Server-side rendering için fallback
-  console.log('🔧 API_BASE fallback: /api');
+  // console.log('🔧 API_BASE fallback: /api');
   return "/api";
 })();
 
@@ -442,21 +442,21 @@ export default function NewsApp({
       if (selectedDay && selectedDay !== "all") url += `&day=${selectedDay}`;
       if (searchQuery && searchQuery.trim() !== "") url += `&search=${encodeURIComponent(searchQuery.trim())}`;
 
-      console.log('🔄 Fetching news from:', url);
+      // console.log('🔄 Fetching news from:', url);
       
       const response = await fetch(url);
       
-      console.log('📡 API Response status:', response.status, response.statusText);
+      // console.log('📡 API Response status:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('📊 API Response data:', {
-        newsCount: data.news?.length || 0,
-        pagination: data.pagination
-      });
+      // console.log('📊 API Response data:', {
+      //   newsCount: data.news?.length || 0,
+      //   pagination: data.pagination
+      // });
       
       setNews(data.news || []);
       setPagination(data.pagination || {
@@ -488,14 +488,14 @@ export default function NewsApp({
   const fetchSources = async () => {
     try {
       const url = `${API_BASE}/sources`;
-      console.log('🔄 Fetching sources from:', url);
+      // console.log('🔄 Fetching sources from:', url);
       
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('📊 Sources fetched:', data?.length || 0);
+      // console.log('📊 Sources fetched:', data?.length || 0);
       setSources(data || []);
     } catch (error) {
       console.error("❌ Error fetching sources:", error);
@@ -798,7 +798,7 @@ export default function NewsApp({
 
           // Container zaten içerik varsa, tekrar initialize etme
           if (containerElement.children.length > 0 || containerElement.innerHTML.trim() !== '') {
-            console.log(`Container ${uniqueId} already has content, skipping...`);
+            // console.log(`Container ${uniqueId} already has content, skipping...`);
             setAdLoaded(true);
             return;
           }

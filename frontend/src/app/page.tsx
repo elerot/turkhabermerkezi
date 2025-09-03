@@ -9,7 +9,7 @@ export const fetchCache = 'force-no-store'
 export const runtime = 'nodejs'
 
 export default async function HomePage() {
-  console.log('🏠 HomePage rendering at:', new Date().toISOString())
+  // console.log('🏠 HomePage rendering at:', new Date().toISOString())
   
   // Server-side'da her zaman fresh date al
   const today = new Date()
@@ -18,7 +18,7 @@ export default async function HomePage() {
   const day = today.getDate().toString().padStart(2, '0')
   
   const redirectUrl = `/${year}/${month}/${day}`
-  console.log(`📍 Redirecting to: ${redirectUrl}`)
+  // console.log(`📍 Redirecting to: ${redirectUrl}`)
   
   redirect(redirectUrl)
 }
