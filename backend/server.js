@@ -10,8 +10,31 @@ const app = express();
 const parser = new Parser();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Middleware - CORS güvenliği
+const corsOptions = {
+  origin: function (origin, callback) {
+    // localhost ve saatdakika.com domainlerine izin ver
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://saatdakika.com',
+      'https://www.saatdakika.com'
+    ];
+    
+    // Origin yoksa (Postman, curl gibi) veya izin verilen listede ise kabul et
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`🚫 CORS blocked request from: ${origin}`);
+      callback(new Error('CORS policy violation: Origin not allowed'));
+    }
+  },
+  credentials: true, // Cookie ve authorization header'ları için
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Data storage paths
@@ -1673,8 +1696,25 @@ app.post("/api/clear-cache", (req, res) => {
   }
 });
 
+// SEO endpoints - Herkese açık (Google bot'ları için)
+const seoCorsOptions = {
+  origin: true, // Tüm originlere izin ver
+  methods: ['GET'],
+  allowedHeaders: ['Content-Type']
+};
+
+app.get("/api/robots.txt", cors(seoCorsOptions), (req, res) => {
+  res.set("Content-Type", "text/plain");
+  res.send(`User-agent: *
+Allow: /
+
+Sitemap: https://saatdakika.com/api/sitemap.xml
+Sitemap: https://www.saatdakika.com/api/sitemap.xml`);
+});
+
 // Dynamic sitemap.xml generator - UPDATED for new URL structure
-app.get("/api/sitemap.xml", (req, res) => {
+// Herkese açık (SEO için gerekli)
+app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
   try {
     console.log(`🔄 sitemap.xml yaratılıyor...`);
     const currentDate = new Date().toISOString().split("T")[0];
