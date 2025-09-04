@@ -1158,7 +1158,1001 @@
     "kaynak": "Test Haber",
     "kategori": "Test",
     "url": "https://www.example.com/rss/test.xml",
-    "aktif": true,
+    "aktif": false,
     "priority": 1
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Siyaset",
+    "url": "https://www.trthaber.com/siyaset_articles.rss",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Dünya",
+    "url": "https://www.trthaber.com/dunya_articles.rss",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Teknoloji",
+    "url": "https://www.trthaber.com/teknoloji_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Sağlık",
+    "url": "https://www.trthaber.com/saglik_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Kültür Sanat",
+    "url": "https://www.trthaber.com/kultur-sanat_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Eğitim",
+    "url": "https://www.trthaber.com/egitim_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Çevre",
+    "url": "https://www.trthaber.com/cevre_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Bilim",
+    "url": "https://www.trthaber.com/bilim_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Turizm",
+    "url": "https://www.trthaber.com/turizm_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Enerji",
+    "url": "https://www.trthaber.com/enerji_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Ulaşım",
+    "url": "https://www.trthaber.com/ulasim_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Güvenlik",
+    "url": "https://www.trthaber.com/guvenlik_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Hukuk",
+    "url": "https://www.trthaber.com/hukuk_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Sosyal Medya",
+    "url": "https://www.trthaber.com/sosyal-medya_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "İnsan Hakları",
+    "url": "https://www.trthaber.com/insan-haklari_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Kadın",
+    "url": "https://www.trthaber.com/kadin_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Çocuk",
+    "url": "https://www.trthaber.com/cocuk_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Gençlik",
+    "url": "https://www.trthaber.com/genclik_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Yaşlı",
+    "url": "https://www.trthaber.com/yasli_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Engelli",
+    "url": "https://www.trthaber.com/engelli_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Göç",
+    "url": "https://www.trthaber.com/goc_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Afet",
+    "url": "https://www.trthaber.com/afet_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "İklim",
+    "url": "https://www.trthaber.com/iklim_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Tarım",
+    "url": "https://www.trthaber.com/tarim_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Hayvancılık",
+    "url": "https://www.trthaber.com/hayvancilik_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Balıkçılık",
+    "url": "https://www.trthaber.com/balikcilik_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Orman",
+    "url": "https://www.trthaber.com/orman_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Su",
+    "url": "https://www.trthaber.com/su_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Hava",
+    "url": "https://www.trthaber.com/hava_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Toprak",
+    "url": "https://www.trthaber.com/toprak_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Maden",
+    "url": "https://www.trthaber.com/maden_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "İnşaat",
+    "url": "https://www.trthaber.com/insaat_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Gayrimenkul",
+    "url": "https://www.trthaber.com/gayrimenkul_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Finans",
+    "url": "https://www.trthaber.com/finans_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Borsa",
+    "url": "https://www.trthaber.com/borsa_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Döviz",
+    "url": "https://www.trthaber.com/doviz_articles.rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Altın",
+    "url": "https://www.trthaber.com/altin_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Petrol",
+    "url": "https://www.trthaber.com/petrol_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Doğalgaz",
+    "url": "https://www.trthaber.com/dogalgaz_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Kömür",
+    "url": "https://www.trthaber.com/komur_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Nükleer",
+    "url": "https://www.trthaber.com/nukleer_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Yenilenebilir Enerji",
+    "url": "https://www.trthaber.com/yenilenebilir-enerji_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Güneş Enerjisi",
+    "url": "https://www.trthaber.com/gunes-enerjisi_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Rüzgar Enerjisi",
+    "url": "https://www.trthaber.com/ruzgar-enerjisi_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Hidroelektrik",
+    "url": "https://www.trthaber.com/hidroelektrik_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Jeotermal",
+    "url": "https://www.trthaber.com/jeotermal_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Biyokütle",
+    "url": "https://www.trthaber.com/biyokutle_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Hidrojen",
+    "url": "https://www.trthaber.com/hidrojen_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Elektrikli Araç",
+    "url": "https://www.trthaber.com/elektrikli-arac_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Otomotiv",
+    "url": "https://www.trthaber.com/otomotiv_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Havacılık",
+    "url": "https://www.trthaber.com/havacilik_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Denizcilik",
+    "url": "https://www.trthaber.com/denizcilik_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Demiryolu",
+    "url": "https://www.trthaber.com/demiryolu_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Karayolu",
+    "url": "https://www.trthaber.com/karayolu_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Metro",
+    "url": "https://www.trthaber.com/metro_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Tramvay",
+    "url": "https://www.trthaber.com/tramvay_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Otobüs",
+    "url": "https://www.trthaber.com/otobus_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Taksi",
+    "url": "https://www.trthaber.com/taksi_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Bisiklet",
+    "url": "https://www.trthaber.com/bisiklet_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Motosiklet",
+    "url": "https://www.trthaber.com/motosiklet_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Kamyon",
+    "url": "https://www.trthaber.com/kamyon_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Kamyonet",
+    "url": "https://www.trthaber.com/kamyonet_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Minibüs",
+    "url": "https://www.trthaber.com/minibus_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Dolmuş",
+    "url": "https://www.trthaber.com/dolmus_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Teleferik",
+    "url": "https://www.trthaber.com/teleferik_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Füniküler",
+    "url": "https://www.trthaber.com/funikuler_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Asansör",
+    "url": "https://www.trthaber.com/asansor_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Yürüyen Merdiven",
+    "url": "https://www.trthaber.com/yuruyen-merdiven_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Yürüyen Bant",
+    "url": "https://www.trthaber.com/yuruyen-bant_articles.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Köprü",
+    "url": "https://www.trthaber.com/kopru_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Tünel",
+    "url": "https://www.trthaber.com/tunel_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Baraj",
+    "url": "https://www.trthaber.com/baraj_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "HES",
+    "url": "https://www.trthaber.com/hes_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "GES",
+    "url": "https://www.trthaber.com/ges_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "RES",
+    "url": "https://www.trthaber.com/res_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "JES",
+    "url": "https://www.trthaber.com/jes_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "BES",
+    "url": "https://www.trthaber.com/bes_articles.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Bilim",
+    "url": "https://www.haberturk.com/rss/kategori/bilim.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Çevre",
+    "url": "https://www.haberturk.com/rss/kategori/cevre.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Turizm",
+    "url": "https://www.haberturk.com/rss/kategori/turizm.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Enerji",
+    "url": "https://www.haberturk.com/rss/kategori/enerji.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Ulaşım",
+    "url": "https://www.haberturk.com/rss/kategori/ulasim.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Güvenlik",
+    "url": "https://www.haberturk.com/rss/kategori/guvenlik.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Hukuk",
+    "url": "https://www.haberturk.com/rss/kategori/hukuk.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Sosyal Medya",
+    "url": "https://www.haberturk.com/rss/kategori/sosyal-medya.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "İnsan Hakları",
+    "url": "https://www.haberturk.com/rss/kategori/insan-haklari.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Çocuk",
+    "url": "https://www.haberturk.com/rss/kategori/cocuk.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Gençlik",
+    "url": "https://www.haberturk.com/rss/kategori/genclik.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Yaşlı",
+    "url": "https://www.haberturk.com/rss/kategori/yasli.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Engelli",
+    "url": "https://www.haberturk.com/rss/kategori/engelli.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Göç",
+    "url": "https://www.haberturk.com/rss/kategori/goc.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Afet",
+    "url": "https://www.haberturk.com/rss/kategori/afet.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "İklim",
+    "url": "https://www.haberturk.com/rss/kategori/iklim.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Tarım",
+    "url": "https://www.haberturk.com/rss/kategori/tarim.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Hayvancılık",
+    "url": "https://www.haberturk.com/rss/kategori/hayvancilik.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Balıkçılık",
+    "url": "https://www.haberturk.com/rss/kategori/balikcilik.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Orman",
+    "url": "https://www.haberturk.com/rss/kategori/orman.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Su",
+    "url": "https://www.haberturk.com/rss/kategori/su.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Hava",
+    "url": "https://www.haberturk.com/rss/kategori/hava.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Toprak",
+    "url": "https://www.haberturk.com/rss/kategori/toprak.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Maden",
+    "url": "https://www.haberturk.com/rss/kategori/maden.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "İnşaat",
+    "url": "https://www.haberturk.com/rss/kategori/insaat.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Gayrimenkul",
+    "url": "https://www.haberturk.com/rss/kategori/gayrimenkul.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Finans",
+    "url": "https://www.haberturk.com/rss/kategori/finans.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Borsa",
+    "url": "https://www.haberturk.com/rss/kategori/borsa.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Döviz",
+    "url": "https://www.haberturk.com/rss/kategori/doviz.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Altın",
+    "url": "https://www.haberturk.com/rss/kategori/altin.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Petrol",
+    "url": "https://www.haberturk.com/rss/kategori/petrol.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Doğalgaz",
+    "url": "https://www.haberturk.com/rss/kategori/dogalgaz.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Kömür",
+    "url": "https://www.haberturk.com/rss/kategori/komur.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Nükleer",
+    "url": "https://www.haberturk.com/rss/kategori/nukleer.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Yenilenebilir Enerji",
+    "url": "https://www.haberturk.com/rss/kategori/yenilenebilir-enerji.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Güneş Enerjisi",
+    "url": "https://www.haberturk.com/rss/kategori/gunes-enerjisi.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Rüzgar Enerjisi",
+    "url": "https://www.haberturk.com/rss/kategori/ruzgar-enerjisi.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Hidroelektrik",
+    "url": "https://www.haberturk.com/rss/kategori/hidroelektrik.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Jeotermal",
+    "url": "https://www.haberturk.com/rss/kategori/jeotermal.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Biyokütle",
+    "url": "https://www.haberturk.com/rss/kategori/biyokutle.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Hidrojen",
+    "url": "https://www.haberturk.com/rss/kategori/hidrojen.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Elektrikli Araç",
+    "url": "https://www.haberturk.com/rss/kategori/elektrikli-arac.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Otomotiv",
+    "url": "https://www.haberturk.com/rss/kategori/otomotiv.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Havacılık",
+    "url": "https://www.haberturk.com/rss/kategori/havacilik.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Denizcilik",
+    "url": "https://www.haberturk.com/rss/kategori/denizcilik.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Demiryolu",
+    "url": "https://www.haberturk.com/rss/kategori/demiryolu.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Karayolu",
+    "url": "https://www.haberturk.com/rss/kategori/karayolu.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Metro",
+    "url": "https://www.haberturk.com/rss/kategori/metro.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Tramvay",
+    "url": "https://www.haberturk.com/rss/kategori/tramvay.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Otobüs",
+    "url": "https://www.haberturk.com/rss/kategori/otobus.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Taksi",
+    "url": "https://www.haberturk.com/rss/kategori/taksi.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Bisiklet",
+    "url": "https://www.haberturk.com/rss/kategori/bisiklet.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Motosiklet",
+    "url": "https://www.haberturk.com/rss/kategori/motosiklet.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Kamyon",
+    "url": "https://www.haberturk.com/rss/kategori/kamyon.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Kamyonet",
+    "url": "https://www.haberturk.com/rss/kategori/kamyonet.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Minibüs",
+    "url": "https://www.haberturk.com/rss/kategori/minibus.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Dolmuş",
+    "url": "https://www.haberturk.com/rss/kategori/dolmus.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Teleferik",
+    "url": "https://www.haberturk.com/rss/kategori/teleferik.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Füniküler",
+    "url": "https://www.haberturk.com/rss/kategori/funikuler.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Asansör",
+    "url": "https://www.haberturk.com/rss/kategori/asansor.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Yürüyen Merdiven",
+    "url": "https://www.haberturk.com/rss/kategori/yuruyen-merdiven.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Yürüyen Bant",
+    "url": "https://www.haberturk.com/rss/kategori/yuruyen-bant.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Köprü",
+    "url": "https://www.haberturk.com/rss/kategori/kopru.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Tünel",
+    "url": "https://www.haberturk.com/rss/kategori/tunel.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Habertürk",
+    "kategori": "Baraj",
+    "url": "https://www.haberturk.com/rss/kategori/baraj.xml",
+    "aktif": true,
+    "priority": 4
   }
 ]

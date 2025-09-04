@@ -330,11 +330,12 @@ function getTodayNewsFromCache() {
 
   // If no in-memory data, try to load from archive file
   if (todayNewsData.length === 0) {
+    const [year, month, day] = todayKey.split("-");
     const todayArchiveFile = path.join(
       ARCHIVES_DIR,
-      todayKey.split("-")[0],
-      todayKey.split("-")[1],
-      `${todayKey}.json`
+      year,
+      month,
+      `${day}.json` // Sadece gün numarası
     );
 
     if (fs.existsSync(todayArchiveFile)) {
@@ -478,7 +479,7 @@ function createArchiveStructure(date) {
     month,
     day,
     dateKey: `${year}-${month}-${day}`,
-    archiveFile: path.join(monthDir, `${year}-${month}-${day}.json`),
+    archiveFile: path.join(monthDir, `${day}.json`), // Sadece gün numarası
   };
 }
 
@@ -563,11 +564,12 @@ function extractImageFromRSS(item) {
 function loadTodayNews() {
   try {
     const todayKey = getTodayKey();
+    const [year, month, day] = todayKey.split("-");
     const todayArchiveFile = path.join(
       ARCHIVES_DIR,
-      todayKey.split("-")[0], // year
-      todayKey.split("-")[1], // month
-      `${todayKey}.json`
+      year,
+      month,
+      `${day}.json` // Sadece gün numarası
     );
 
     if (fs.existsSync(todayArchiveFile)) {
@@ -655,7 +657,10 @@ function updateArchiveSummaries(dateKey) {
       // Read all daily files in this month to count news
       const days = fs.readdirSync(monthDir)
         .filter(file => file.endsWith('.json') && file !== 'summary.json')
-        .map(file => file.replace('.json', ''))
+        .map(file => {
+          const day = file.replace('.json', '');
+          return day.padStart(2, "0"); // "3" -> "03" formatına çevir
+        })
         .sort();
 
       let totalNews = 0;
@@ -764,6 +769,87 @@ async function fetchNews() {
 
         const imageUrl = extractImageFromRSS(item);
 
+        // RSS item'ından kategori bilgisini al, yoksa feed'den al
+        let articleCategory = feed.category;
+        if (item.categories && item.categories.length > 0) {
+          articleCategory = item.categories[0];
+        } else if (item.category) {
+          articleCategory = item.category;
+        }
+
+        // Haber başlığına göre kategori tahmin et
+        const title = cleanText(item.title).toLowerCase();
+        const descriptionText = cleanText(item.description || item.contentSnippet || "").toLowerCase();
+        const content = (title + " " + descriptionText).toLowerCase();
+
+        // Spor kategorisi
+        if (content.includes('futbol') || content.includes('basketbol') || content.includes('voleybol') || 
+            content.includes('tenis') || content.includes('spor') || content.includes('maç') || 
+            content.includes('galatasaray') || content.includes('fenerbahçe') || content.includes('beşiktaş') ||
+            content.includes('trabzonspor') || content.includes('başakşehir') || content.includes('antrenman') ||
+            content.includes('şampiyon') || content.includes('lig') || content.includes('kup') ||
+            content.includes('gol') || content.includes('asist') || content.includes('kart') ||
+            content.includes('transfer') || content.includes('oyuncu') || content.includes('teknik direktör')) {
+          articleCategory = "Spor";
+        }
+        // Ekonomi kategorisi
+        else if (content.includes('ekonomi') || content.includes('borsa') || content.includes('dolar') || 
+                 content.includes('euro') || content.includes('altın') || content.includes('enflasyon') ||
+                 content.includes('faiz') || content.includes('kredi') || content.includes('yatırım') ||
+                 content.includes('şirket') || content.includes('piyasa') || content.includes('finans') ||
+                 content.includes('bankacılık') || content.includes('kripto') || content.includes('bitcoin')) {
+          articleCategory = "Ekonomi";
+        }
+        // Teknoloji kategorisi
+        else if (content.includes('teknoloji') || content.includes('yapay zeka') || content.includes('ai') ||
+                 content.includes('yazılım') || content.includes('donanım') || content.includes('telefon') ||
+                 content.includes('bilgisayar') || content.includes('internet') || content.includes('siber') ||
+                 content.includes('dijital') || content.includes('uygulama') || content.includes('app') ||
+                 content.includes('startup') || content.includes('inovasyon') || content.includes('robot')) {
+          articleCategory = "Teknoloji";
+        }
+        // Sağlık kategorisi
+        else if (content.includes('sağlık') || content.includes('hastane') || content.includes('doktor') ||
+                 content.includes('hasta') || content.includes('ilaç') || content.includes('tedavi') ||
+                 content.includes('virüs') || content.includes('covid') || content.includes('pandemi') ||
+                 content.includes('aşı') || content.includes('ameliyat') || content.includes('kanser') ||
+                 content.includes('kalp') || content.includes('beyin') || content.includes('organ')) {
+          articleCategory = "Sağlık";
+        }
+        // Siyaset kategorisi
+        else if (content.includes('siyaset') || content.includes('bakan') || content.includes('milletvekili') ||
+                 content.includes('parti') || content.includes('seçim') || content.includes('oy') ||
+                 content.includes('meclis') || content.includes('hükümet') || content.includes('cumhurbaşkanı') ||
+                 content.includes('başbakan') || content.includes('belediye') || content.includes('vali') ||
+                 content.includes('kaymakam') || content.includes('müsteşar') || content.includes('genel müdür')) {
+          articleCategory = "Siyaset";
+        }
+        // Dünya kategorisi
+        else if (content.includes('dünya') || content.includes('amerika') || content.includes('avrupa') ||
+                 content.includes('rusya') || content.includes('çin') || content.includes('almanya') ||
+                 content.includes('fransa') || content.includes('ingiltere') || content.includes('japonya') ||
+                 content.includes('kore') || content.includes('hindistan') || content.includes('brezilya') ||
+                 content.includes('mısır') || content.includes('iran') || content.includes('israil') ||
+                 content.includes('filistin') || content.includes('ukrayna') || content.includes('suriye')) {
+          articleCategory = "Dünya";
+        }
+        // Kültür Sanat kategorisi
+        else if (content.includes('kültür') || content.includes('sanat') || content.includes('müzik') ||
+                 content.includes('film') || content.includes('dizi') || content.includes('kitap') ||
+                 content.includes('yazar') || content.includes('şarkıcı') || content.includes('oyuncu') ||
+                 content.includes('türkü') || content.includes('konser') || content.includes('sergi') ||
+                 content.includes('tiyatro') || content.includes('opera') || content.includes('bale')) {
+          articleCategory = "Kültür Sanat";
+        }
+        // Eğitim kategorisi
+        else if (content.includes('eğitim') || content.includes('okul') || content.includes('üniversite') ||
+                 content.includes('öğrenci') || content.includes('öğretmen') || content.includes('ders') ||
+                 content.includes('sınav') || content.includes('yks') || content.includes('ales') ||
+                 content.includes('kpss') || content.includes('dgs') || content.includes('yök') ||
+                 content.includes('meb') || content.includes('öğretim') || content.includes('akademik')) {
+          articleCategory = "Eğitim";
+        }
+
         const article = {
           id: Date.now() + Math.random(),
           title: cleanText(item.title),
@@ -771,6 +857,7 @@ async function fetchNews() {
           description,
           pubDate: pubDate.toISOString(),
           source: feed.name,
+          category: articleCategory,
           content_hash: hash,
           created_at: new Date().toISOString(),
           date_key: dateKey,
@@ -847,6 +934,7 @@ app.get("/api/news", (req, res) => {
     page = 1,
     limit = 30,
     source,
+    category,
     year,
     month,
     day,
@@ -870,7 +958,7 @@ app.get("/api/news", (req, res) => {
         filteredNews = [...getTodayNewsFromCache()];
       } else {
         // For other dates, load from archive file
-        const archiveFile = path.join(ARCHIVES_DIR, year, monthPadded, `${dateKey}.json`);
+        const archiveFile = path.join(ARCHIVES_DIR, year, monthPadded, `${dayPadded}.json`);
         
         if (fs.existsSync(archiveFile)) {
           const data = fs.readFileSync(archiveFile, "utf8");
@@ -890,7 +978,8 @@ app.get("/api/news", (req, res) => {
           .reverse(); // Newest first
         
         for (const dayFile of dayFiles) {
-          const dateKey = dayFile.replace('.json', '');
+          const day = dayFile.replace('.json', '');
+          const dateKey = `${year}-${monthPadded}-${day.padStart(2, "0")}`;
           
           // If it's today's date, use cache
           if (dateKey === getTodayKey()) {
@@ -921,7 +1010,8 @@ app.get("/api/news", (req, res) => {
             .reverse();
           
           for (const dayFile of dayFiles) {
-            const dateKey = dayFile.replace('.json', '');
+            const day = dayFile.replace('.json', '');
+            const dateKey = `${year}-${monthDir}-${day.padStart(2, "0")}`;
             
             // If it's today's date, use cache
             if (dateKey === getTodayKey()) {
@@ -946,11 +1036,12 @@ app.get("/api/news", (req, res) => {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateKey = getDateKey(date);
+        const [year, month, day] = dateKey.split("-");
         const archiveFile = path.join(
           ARCHIVES_DIR,
-          dateKey.split("-")[0],
-          dateKey.split("-")[1],
-          `${dateKey}.json`
+          year,
+          month,
+          `${day}.json` // Sadece gün numarası
         );
         
         if (fs.existsSync(archiveFile)) {
@@ -974,6 +1065,19 @@ app.get("/api/news", (req, res) => {
         // Slug eşleşmesi kontrolü
         const articleSlug = createTurkishSlug(article.source);
         const searchSlug = createTurkishSlug(source);
+        return articleSlug === searchSlug;
+      });
+    }
+
+    // Category filtering
+    if (category && category !== "all") {
+      filteredNews = filteredNews.filter((article) => {
+        // Tam eşleşme kontrolü
+        if (article.category === category) return true;
+        
+        // Slug eşleşmesi kontrolü
+        const articleSlug = createTurkishSlug(article.category);
+        const searchSlug = createTurkishSlug(category);
         return articleSlug === searchSlug;
       });
     }
@@ -1077,7 +1181,11 @@ app.get("/api/days/:year/:month", (req, res) => {
     if (fs.existsSync(monthDir)) {
       days = fs.readdirSync(monthDir)
         .filter(file => file.endsWith('.json') && file !== 'summary.json')
-        .map(file => file.replace('.json', ''))
+        .map(file => {
+          // Dosya adı artık sadece gün numarası (örn: "03.json" -> "3")
+          const dayPart = file.replace('.json', '');
+          return parseInt(dayPart).toString(); // "03" -> "3"
+        })
         .sort((a, b) => parseInt(b) - parseInt(a));
     }
 
@@ -1110,7 +1218,7 @@ app.get("/api/archive/:year/:month/:day", (req, res) => {
       ARCHIVES_DIR,
       year,
       monthPadded,
-      `${dateKey}.json`
+      `${dayPadded}.json` // Sadece gün numarası
     );
 
     let data;
@@ -1238,6 +1346,24 @@ app.get("/api/sources", (req, res) => {
   }
 });
 
+// Categories endpoint - reads from RSS feeds file
+app.get("/api/categories", (req, res) => {
+  try {
+    // Get unique categories from active RSS feeds
+    const activeCategories = feeds
+      .map(feed => feed.category) // feed.category kullan
+      .filter((category, index, arr) => arr.indexOf(category) === index) // Remove duplicates
+      .sort();
+    
+    console.log("📡 Categories endpoint: Returning", activeCategories.length, "active categories from RSS feeds");
+    console.log("📡 Active categories:", activeCategories.slice(0, 10)); // İlk 10 kategoriyi log'la
+    res.json(activeCategories);
+  } catch (error) {
+    console.error("❌ Error in /api/categories:", error);
+    res.status(500).json({ error: "Categories yüklenirken hata oluştu" });
+  }
+});
+
 app.get("/api/dates", (req, res) => {
   const metadata = getMetadataFromCache();
   res.json(metadata.dates);
@@ -1248,7 +1374,7 @@ app.get("/api/hours/:date", (req, res) => {
   
   try {
     const [year, month, day] = date.split("-");
-    const archiveFile = path.join(ARCHIVES_DIR, year, month, `${date}.json`);
+    const archiveFile = path.join(ARCHIVES_DIR, year, month, `${day}.json`); // Sadece gün numarası
     
     let hours = [];
     if (fs.existsSync(archiveFile)) {
@@ -1572,7 +1698,10 @@ app.get("/api/sitemap.xml", (req, res) => {
                 if (fs.existsSync(monthDir)) {
                   const days = fs.readdirSync(monthDir)
                     .filter(file => file.endsWith('.json') && file !== 'summary.json')
-                    .map(file => file.replace('.json', ''))
+                    .map(file => {
+                      const day = file.replace('.json', '');
+                      return day.padStart(2, "0"); // "3" -> "03" formatına çevir
+                    })
                     .sort()
                     .reverse();
 

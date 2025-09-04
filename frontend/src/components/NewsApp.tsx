@@ -82,6 +82,7 @@ interface NewsItem {
   description: string;
   pubDate: string;
   source: string;
+  category: string;
   created_at: string;
   date_key: string;
   hour_key: string;
@@ -129,7 +130,9 @@ export default function NewsApp({
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [sourceSearch, setSourceSearch] = useState<string>("");
+  const [categorySearch, setCategorySearch] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [iframeLoadingStates, setIframeLoadingStates] = useState<{ [key: string]: boolean }>({});
   const [iframeErrorStates, setIframeErrorStates] = useState<{ [key: string]: boolean }>({});
@@ -140,12 +143,25 @@ export default function NewsApp({
   // Hierarchical date filters
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableMonths, setAvailableMonths] = useState<MonthInfo[]>([]);
-  const [availableDays, setAvailableDays] = useState<string[]>([]);
 
   const [selectedSource, setSelectedSource] = useState<string>(initialSource || "all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>(initialYear || "all");
   const [selectedMonth, setSelectedMonth] = useState<string>(initialMonth || "all");
-  const [selectedDay, setSelectedDay] = useState<string>(initialDay || "all");
+  // Parse initialDay to extract just the day number
+  const parseDayFromInitial = (day: string) => {
+    if (!day || day === "all") return "all";
+    // If it's already just a number, return it
+    if (/^\d+$/.test(day)) return day;
+    // If it's in format "2025-09-04", extract the day part
+    if (day.includes('-')) {
+      const parts = day.split('-');
+      return parts[parts.length - 1].replace(/^0+/, '') || parts[parts.length - 1]; // Remove leading zeros
+    }
+    return day;
+  };
+
+  const [selectedDay, setSelectedDay] = useState<string>(parseDayFromInitial(initialDay) || "all");
   const [currentPage, setCurrentPage] = useState<number>(initialPage || 1);
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -160,6 +176,12 @@ export default function NewsApp({
     last_update: ""
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Popüler kategoriler için hızlı seçim
+  const popularCategories = [
+    "Ekonomi", "Siyaset", "Spor", "Teknoloji", "Sağlık", 
+    "Dünya", "Gündem", "Magazin", "Kültür Sanat", "Eğitim"
+  ];
 
   // URL oluşturma fonksiyonu
   const buildUrl = (
@@ -231,6 +253,22 @@ export default function NewsApp({
     router.push(url);
   };
 
+  const handleCategoryChange = (category: string) => {
+    if (!category) return;
+    setSelectedCategory(category);
+    setCurrentPage(1);
+    setCategorySearch(""); // Search'i temizle
+    fetchNews(1); // Kategori değiştiğinde haberleri yeniden çek
+  };
+
+  const handleQuickCategoryFilter = (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+    setCategorySearch(""); // Search'i temizle
+    setSearchQuery(""); // Arama sorgusunu temizle
+    fetchNews(1); // Kategori değiştiğinde haberleri yeniden çek
+  };
+
   const handleYearChange = (year: string) => {
     if (!year) return;
     setSelectedYear(year);
@@ -281,11 +319,13 @@ export default function NewsApp({
     const day = today.getDate().toString();
 
     setSelectedSource("all");
+    setSelectedCategory("all");
     setSelectedYear(year);
     setSelectedMonth(month);
     setSelectedDay(day);
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
+    setCategorySearch(""); // Kategori search'i temizle
     setSearchQuery(""); // Arama sorgusunu temizle
 
     const url = buildUrl("all", year, month, day, 1);
@@ -365,11 +405,13 @@ export default function NewsApp({
         const todayDay = now.getDate().toString();
 
         setSelectedSource("all");
+        setSelectedCategory("all");
         setSelectedYear(todayYear);
         setSelectedMonth(todayMonth);
         setSelectedDay(todayDay);
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
         const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1);
@@ -384,11 +426,13 @@ export default function NewsApp({
         const yDay = yesterday.getDate().toString();
 
         setSelectedSource("all");
+        setSelectedCategory("all");
         setSelectedYear(yYear);
         setSelectedMonth(yMonth);
         setSelectedDay(yDay);
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
         const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1);
@@ -400,11 +444,13 @@ export default function NewsApp({
         const tmMonth = (now.getMonth() + 1).toString();
 
         setSelectedSource("all");
+        setSelectedCategory("all");
         setSelectedYear(tmYear);
         setSelectedMonth(tmMonth);
         setSelectedDay("all");
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
         const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1);
@@ -415,11 +461,13 @@ export default function NewsApp({
         const tyYear = now.getFullYear().toString();
 
         setSelectedSource("all");
+        setSelectedCategory("all");
         setSelectedYear(tyYear);
         setSelectedMonth("all");
         setSelectedDay("all");
         setCurrentPage(1);
         setSourceSearch(""); // Search'i temizle
+        setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
         const yearUrl = buildUrl("all", tyYear, "all", "all", 1);
@@ -437,6 +485,7 @@ export default function NewsApp({
     try {
       let url = `${API_BASE}/news?page=${safePage}&limit=30`;
       if (selectedSource && selectedSource !== "all") url += `&source=${encodeURIComponent(selectedSource)}`;
+      if (selectedCategory && selectedCategory !== "all") url += `&category=${encodeURIComponent(selectedCategory)}`;
       if (selectedYear && selectedYear !== "all") url += `&year=${selectedYear}`;
       if (selectedMonth && selectedMonth !== "all") url += `&month=${selectedMonth}`;
       if (selectedDay && selectedDay !== "all") url += `&day=${selectedDay}`;
@@ -504,6 +553,25 @@ export default function NewsApp({
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const url = `${API_BASE}/categories`;
+      // console.log('🔄 Fetching categories from:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      // console.log('📊 Categories fetched:', data?.length || 0);
+      setCategories(data || []);
+    } catch (error) {
+      console.error("❌ Error fetching categories:", error);
+      console.error("❌ API_BASE used:", API_BASE);
+      setCategories([]);
+    }
+  };
+
   const fetchYears = async () => {
     try {
       const response = await fetch(`${API_BASE}/years`);
@@ -536,22 +604,25 @@ export default function NewsApp({
     }
   };
 
-  const fetchDays = async (year: string, month: string) => {
+  // Seçili aya göre günleri hesapla
+  const getAvailableDays = (year: string, month: string): string[] => {
     if (!year || !month || year === "all" || month === "all") {
-      setAvailableDays([]);
-      return;
+      return [];
     }
-    try {
-      const response = await fetch(`${API_BASE}/days/${year}/${month}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setAvailableDays(data || []);
-    } catch (error) {
-      console.error("Error fetching days:", error);
-      setAvailableDays([]);
+    
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    
+    // Ayın gün sayısını hesapla
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    
+    // 1'den ayın son gününe kadar günleri oluştur
+    const days: string[] = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day.toString());
     }
+    
+    return days;
   };
 
   const fetchStats = async () => {
@@ -622,6 +693,7 @@ export default function NewsApp({
   const getFilterSummary = () => {
     const filters = [];
     if (selectedSource && selectedSource !== "all") filters.push(selectedSource);
+    if (selectedCategory && selectedCategory !== "all") filters.push(selectedCategory);
     if (selectedYear && selectedYear !== "all") {
       let dateFilter = selectedYear;
       if (selectedMonth && selectedMonth !== "all") {
@@ -896,6 +968,7 @@ export default function NewsApp({
      useEffect(() => {
      // İlk yüklemede sadece metadata'ları çek
      fetchSources();
+     fetchCategories();
      fetchYears();
      fetchStats();
      // fetchNews burada YOK - props useEffect'i çekecek
@@ -984,14 +1057,8 @@ export default function NewsApp({
     }
   }, [selectedYear]);
 
-  useEffect(() => {
-    // Gün listesini güncelle
-    if (selectedYear && selectedYear !== "all" && selectedMonth && selectedMonth !== "all") {
-      fetchDays(selectedYear, selectedMonth);
-    } else {
-      setAvailableDays([]);
-    }
-  }, [selectedYear, selectedMonth]);
+  // Seçili aya göre günleri hesapla
+  const availableDays = getAvailableDays(selectedYear, selectedMonth);
 
   // Basit çözüm - her props değişiminde haberleri çek
   useEffect(() => {
@@ -1005,7 +1072,7 @@ export default function NewsApp({
     setSelectedSource(safeSource);
     setSelectedYear(safeYear);
     setSelectedMonth(safeMonth);
-    setSelectedDay(safeDay);
+    setSelectedDay(parseDayFromInitial(safeDay));
     setCurrentPage(safePage);
 
     // Direkt fetch et - timeout yok
@@ -1139,6 +1206,98 @@ export default function NewsApp({
             )}
           </div>
 
+          {/* Quick Filters - Single Row */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Hızlı Tarih Seçimi */}
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Hızlı Tarih:
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("today")}
+                    className="hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Bugün
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("yesterday")}
+                    className="hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    Dün
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("thisMonth")}
+                    className="hover:bg-green-50 hover:border-green-300"
+                  >
+                    <CalendarDays className="h-3 w-3 mr-1" />
+                    Bu Ay
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("thisYear")}
+                    className="hover:bg-purple-50 hover:border-purple-300"
+                  >
+                    <Archive className="h-3 w-3 mr-1" />
+                    Bu Yıl
+                  </Button>
+                </div>
+              </div>
+
+              {/* Hızlı Kategori Seçimi */}
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Popüler Kategoriler:
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {popularCategories.map((category) => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleQuickCategoryFilter(category)}
+                      className={`${
+                        selectedCategory === category 
+                          ? "bg-blue-600 text-white hover:bg-blue-700" 
+                          : "hover:bg-blue-50 hover:border-blue-300"
+                      }`}
+                    >
+                      {category}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickCategoryFilter("all")}
+                    className={`${
+                      selectedCategory === "all" 
+                        ? "bg-gray-600 text-white hover:bg-gray-700" 
+                        : "hover:bg-gray-50 hover:border-gray-300"
+                    }`}
+                  >
+                    Tümü
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Mobile collapse filter */}
           <div className="block md:hidden mb-4">
             <Button
@@ -1158,7 +1317,7 @@ export default function NewsApp({
           </div>
 
           <div
-            className={`grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 ${mobileFiltersOpen ? "block" : "hidden md:grid"
+            className={`grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 ${mobileFiltersOpen ? "block" : "hidden md:grid"
               }`}
           >
             {/* Source Filter */}
@@ -1204,6 +1363,56 @@ export default function NewsApp({
                       .map((source) => (
                         <SelectItem key={source} value={source}>
                           {source}
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Haber Kategorisi
+              </label>
+              <Select value={selectedCategory || "all"} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Kategori seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      placeholder="Kategori ara..."
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {!categories || categories.length === 0 ? (
+                    <SelectItem value="loading" disabled>
+                      Kategoriler yükleniyor... ({categories ? categories.length : 0})
+                    </SelectItem>
+                  ) : (
+                    categories
+                      .filter(category => {
+                        // Hem tam eşleşme hem de slug eşleşmesi kontrol et
+                        if (!category) return false;
+                        const categoryLower = category.toLowerCase();
+                        const searchLower = categorySearch.toLowerCase();
+
+                        // Tam eşleşme kontrolü
+                        if (categoryLower.includes(searchLower)) return true;
+
+                        // Slug eşleşmesi kontrolü
+                        const categorySlug = createTurkishSlug(category);
+                        const searchSlug = createTurkishSlug(categorySearch);
+                        return categorySlug.includes(searchSlug);
+                      })
+                      .map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
                         </SelectItem>
                       ))
                   )}
@@ -1266,7 +1475,7 @@ export default function NewsApp({
                   </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tümü</SelectItem>
-                      {availableDays && availableDays.length > 0 && availableDays.map((day) => (
+                      {availableDays.map((day) => (
                         <SelectItem key={day} value={day}>
                           {day}
                         </SelectItem>
@@ -1287,53 +1496,6 @@ export default function NewsApp({
             </div>
           </div>
 
-          {/* Quick Date Filters */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex items-center space-x-2 mb-3">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Hızlı Tarih Seçimi:
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickDateFilter("today")}
-                className="hover:bg-blue-50 hover:border-blue-300"
-              >
-                <Calendar className="h-3 w-3 mr-1" />
-                Bugün
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickDateFilter("yesterday")}
-                className="hover:bg-blue-50 hover:border-blue-300"
-              >
-                <Clock className="h-3 w-3 mr-1" />
-                Dün
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickDateFilter("thisMonth")}
-                className="hover:bg-green-50 hover:border-green-300"
-              >
-                <CalendarDays className="h-3 w-3 mr-1" />
-                Bu Ay
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickDateFilter("thisYear")}
-                className="hover:bg-purple-50 hover:border-purple-300"
-              >
-                <Archive className="h-3 w-3 mr-1" />
-                Bu Yıl
-              </Button>
-            </div>
-          </div>
         </div>
 
                 {/* News Results Summary */}
@@ -1466,7 +1628,7 @@ export default function NewsApp({
                           )}
 
                           {/* Source badge overlay */}
-                          <div className="absolute top-2 left-2">
+                          <div className="absolute top-2 left-2 flex flex-col gap-1">
                             <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
                               <span className="block sm:hidden">
                                 {searchQuery && searchQuery.trim() !== "" 
@@ -1481,7 +1643,12 @@ export default function NewsApp({
                                 }
                               </span>
                             </Badge>
-                            </div>
+                            {article.category && article.category !== "Genel" && (
+                              <Badge className="text-xs bg-blue-500/90 backdrop-blur-sm text-white px-1 py-0.5">
+                                {article.category}
+                              </Badge>
+                            )}
+                          </div>
 
                           {/* Date overlay */}
                           <div className="absolute top-2 right-2">
@@ -1496,20 +1663,27 @@ export default function NewsApp({
                       {/* Source badge ve Date - Resim yoksa üstte göster */}
                       {(!article.image || article.image.trim() === "") && (
                         <div className="relative pt-2 px-3 md:px-6 flex items-center justify-between">
-                          <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
-                            <span className="block sm:hidden">
-                              {searchQuery && searchQuery.trim() !== "" 
-                                ? highlightSearchTerm((article.source || "Kaynak").split(" ")[0], searchQuery.trim())
-                                : (article.source || "Kaynak").split(" ")[0]
-                              }
-                            </span>
-                            <span className="hidden sm:block">
-                              {searchQuery && searchQuery.trim() !== "" 
-                                ? highlightSearchTerm(article.source || "Kaynak", searchQuery.trim())
-                                : article.source || "Kaynak"
-                              }
-                            </span>
-                          </Badge>
+                          <div className="flex flex-col gap-1">
+                            <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
+                              <span className="block sm:hidden">
+                                {searchQuery && searchQuery.trim() !== "" 
+                                  ? highlightSearchTerm((article.source || "Kaynak").split(" ")[0], searchQuery.trim())
+                                  : (article.source || "Kaynak").split(" ")[0]
+                                }
+                              </span>
+                              <span className="hidden sm:block">
+                                {searchQuery && searchQuery.trim() !== "" 
+                                  ? highlightSearchTerm(article.source || "Kaynak", searchQuery.trim())
+                                  : article.source || "Kaynak"
+                                }
+                              </span>
+                            </Badge>
+                            {article.category && article.category !== "Genel" && (
+                              <Badge className="text-xs bg-blue-500 text-white px-2 py-1">
+                                {article.category}
+                              </Badge>
+                            )}
+                          </div>
 
                           <div className="flex items-center text-xs text-gray-500">
                             <Clock className="h-3 w-3 mr-1" />
@@ -1552,9 +1726,16 @@ export default function NewsApp({
                           <DialogContent className="max-w-[98vw] max-h-[95vh] w-[98vw] h-[90vh] overflow-hidden p-0 sm:w-[95vw] sm:h-[85vh] md:w-[92vw] md:h-[80vh] lg:w-[88vw] lg:h-[85vh] xl:w-[85vw] xl:h-[85vh]">
                             <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-white border-b">
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
-                                <Badge variant="outline" className="text-xs sm:text-sm w-fit">
-                                  {article.source || "Kaynak"}
-                                </Badge>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <Badge variant="outline" className="text-xs sm:text-sm w-fit">
+                                    {article.source || "Kaynak"}
+                                  </Badge>
+                                  {article.category && article.category !== "Genel" && (
+                                    <Badge className="text-xs sm:text-sm bg-blue-500 text-white w-fit">
+                                      {article.category}
+                                    </Badge>
+                                  )}
+                                </div>
                                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
                                   <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                   {article.pubDate ? formatDate(article.pubDate) : "Tarih yok"}
