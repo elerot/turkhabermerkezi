@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -125,6 +125,7 @@ export default function NewsApp({
   initialPage = 1,
 }: NewsAppProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // State
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -189,7 +190,8 @@ export default function NewsApp({
     year: string,
     month: string,
     day: string,
-    page: number = 1
+    page: number = 1,
+    category?: string
   ) => {
     let url = "";
 
@@ -209,6 +211,15 @@ export default function NewsApp({
           if (page > 1) url += `/${page}`;
         }
       }
+    }
+
+    // Kategori parametresini query string olarak ekle
+    const params = new URLSearchParams();
+    if (category && category !== "all") {
+      params.set("category", category);
+    }
+    if (params.toString()) {
+      url += (url.includes("?") ? "&" : "?") + params.toString();
     }
 
     return url || "/";
@@ -249,7 +260,7 @@ export default function NewsApp({
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
     // Yeni source değerini kullan, diğerleri mevcut state'ten al
-    const url = buildUrl(source, selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1);
+    const url = buildUrl(source, selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, selectedCategory || "all");
     router.push(url);
   };
 
@@ -258,7 +269,9 @@ export default function NewsApp({
     setSelectedCategory(category);
     setCurrentPage(1);
     setCategorySearch(""); // Search'i temizle
-    fetchNews(1); // Kategori değiştiğinde haberleri yeniden çek
+    // URL'yi güncelle ve sayfayı yenile
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category);
+    router.push(url);
   };
 
   const handleQuickCategoryFilter = (category: string) => {
@@ -266,7 +279,9 @@ export default function NewsApp({
     setCurrentPage(1);
     setCategorySearch(""); // Search'i temizle
     setSearchQuery(""); // Arama sorgusunu temizle
-    fetchNews(1); // Kategori değiştiğinde haberleri yeniden çek
+    // URL'yi güncelle ve sayfayı yenile
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category);
+    router.push(url);
   };
 
   const handleYearChange = (year: string) => {
@@ -275,7 +290,7 @@ export default function NewsApp({
     setSelectedMonth("all");
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", year, "all", "all", 1);
+    const url = buildUrl(selectedSource || "all", year, "all", "all", 1, selectedCategory || "all");
     router.push(url);
   };
 
@@ -284,7 +299,7 @@ export default function NewsApp({
     setSelectedMonth(month);
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", month, "all", 1);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", month, "all", 1, selectedCategory || "all");
     router.push(url);
   };
 
@@ -292,7 +307,7 @@ export default function NewsApp({
     if (!day) return;
     setSelectedDay(day);
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", day, 1);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", day, 1, selectedCategory || "all");
     router.push(url);
   };
 
@@ -306,7 +321,8 @@ export default function NewsApp({
       selectedYear || "all",
       selectedMonth || "all",
       selectedDay || "all",
-      safePage
+      safePage,
+      selectedCategory || "all"
     );
     router.push(url);
     //fetchNews(safePage); // Sadece page parametresi geç, diğerleri state'ten alınır
@@ -328,7 +344,7 @@ export default function NewsApp({
     setCategorySearch(""); // Kategori search'i temizle
     setSearchQuery(""); // Arama sorgusunu temizle
 
-    const url = buildUrl("all", year, month, day, 1);
+    const url = buildUrl("all", year, month, day, 1, "all");
     router.push(url);
   };
 
@@ -414,7 +430,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1);
+        const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1, "all");
         router.push(todayUrl);
         break;
 
@@ -435,7 +451,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1);
+        const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1, "all");
         router.push(yesterdayUrl);
         break;
 
@@ -453,7 +469,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1);
+        const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1, "all");
         router.push(monthUrl);
         break;
 
@@ -470,7 +486,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const yearUrl = buildUrl("all", tyYear, "all", "all", 1);
+        const yearUrl = buildUrl("all", tyYear, "all", "all", 1, "all");
         router.push(yearUrl);
         break;
     }
@@ -1068,16 +1084,20 @@ export default function NewsApp({
     const safeYear = initialYear || "all";
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
+    
+    // URL'den kategori parametresini oku
+    const categoryFromUrl = searchParams.get("category") || "all";
 
     setSelectedSource(safeSource);
     setSelectedYear(safeYear);
     setSelectedMonth(safeMonth);
     setSelectedDay(parseDayFromInitial(safeDay));
+    setSelectedCategory(categoryFromUrl);
     setCurrentPage(safePage);
 
     // Direkt fetch et - timeout yok
     fetchNews(safePage);
-  }, [initialSource, initialYear, initialMonth, initialDay, initialPage]);
+  }, [initialSource, initialYear, initialMonth, initialDay, initialPage, searchParams]);
 
   // Sayfa yenilendiğinde ve ekran boyutu değiştiğinde reklam pozisyonlarını yeniden oluştur
   useEffect(() => {

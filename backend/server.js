@@ -288,6 +288,7 @@ function generateCacheKey(req) {
     page = 1,
     limit = 30,
     source,
+    category,
     year,
     month,
     day,
@@ -297,7 +298,7 @@ function generateCacheKey(req) {
     q,
   } = req.query;
   const searchQuery = search || q || "all";
-  return `api_${page}_${limit}_${source || "all"}_${year || "all"}_${
+  return `api_${page}_${limit}_${source || "all"}_${category || "all"}_${year || "all"}_${
     month || "all"
   }_${day || "all"}_${date || "all"}_${hour || "all"}_${searchQuery}`;
 }
@@ -1346,17 +1347,52 @@ app.get("/api/sources", (req, res) => {
   }
 });
 
-// Categories endpoint - reads from RSS feeds file
+// Categories endpoint - reads from actual news data
 app.get("/api/categories", (req, res) => {
   try {
-    // Get unique categories from active RSS feeds
-    const activeCategories = feeds
-      .map(feed => feed.category) // feed.category kullan
-      .filter((category, index, arr) => arr.indexOf(category) === index) // Remove duplicates
-      .sort();
+    // Get unique categories from actual news data in archives
+    const categories = new Set();
     
-    console.log("📡 Categories endpoint: Returning", activeCategories.length, "active categories from RSS feeds");
-    console.log("📡 Active categories:", activeCategories.slice(0, 10)); // İlk 10 kategoriyi log'la
+    // Start with today's news
+    const todayNews = getTodayNewsFromCache();
+    todayNews.forEach(article => {
+      if (article.category) {
+        categories.add(article.category);
+      }
+    });
+    
+    // Add categories from recent archive files (last 30 days)
+    const today = new Date();
+    for (let i = 1; i <= 30; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateKey = getDateKey(date);
+      const [year, month, day] = dateKey.split("-");
+      const archiveFile = path.join(
+        ARCHIVES_DIR,
+        year,
+        month,
+        `${day}.json`
+      );
+      
+      if (fs.existsSync(archiveFile)) {
+        try {
+          const dayData = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
+          dayData.forEach(article => {
+            if (article.category) {
+              categories.add(article.category);
+            }
+          });
+        } catch (error) {
+          console.warn(`Error reading archive file: ${archiveFile}`, error);
+        }
+      }
+    }
+    
+    const activeCategories = Array.from(categories).sort();
+    
+    console.log("📡 Categories endpoint: Returning", activeCategories.length, "categories from actual news data");
+    console.log("📡 Active categories:", activeCategories.slice(0, 10));
     res.json(activeCategories);
   } catch (error) {
     console.error("❌ Error in /api/categories:", error);
