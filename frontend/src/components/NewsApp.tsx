@@ -1122,7 +1122,7 @@ export default function NewsApp({
               {stats && stats.total_news && stats.total_news > 0 && (
                 <Badge
                   variant="secondary"
-                  className="text-xs md:text-sm hidden sm:flex"
+                  className="text-xs md:text-sm flex"
                 >
                   {formatCompactNumber(stats.total_news)} Haber
                 </Badge>
@@ -1628,7 +1628,7 @@ export default function NewsApp({
                           )}
 
                           {/* Source badge overlay */}
-                          <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          <div className="absolute top-2 left-2 flex flex-row gap-1">
                             <Badge className="text-xs bg-white/90 backdrop-blur-sm text-gray-800 px-1 py-0.5">
                               <span className="block sm:hidden">
                                 {searchQuery && searchQuery.trim() !== "" 
@@ -1663,7 +1663,7 @@ export default function NewsApp({
                       {/* Source badge ve Date - Resim yoksa üstte göster */}
                       {(!article.image || article.image.trim() === "") && (
                         <div className="relative pt-2 px-3 md:px-6 flex items-center justify-between">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-row gap-1">
                             <Badge className="text-xs bg-gray-100 text-gray-800 px-2 py-1">
                               <span className="block sm:hidden">
                                 {searchQuery && searchQuery.trim() !== "" 
