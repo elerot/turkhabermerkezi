@@ -199,27 +199,48 @@ export default function NewsApp({
     if (source && source !== "all") {
       const sourceSlug = createTurkishSlug(source);
       url = `/source/${sourceSlug}`;
-    }
-
-    // Tarih parametrelerini ekle (source'dan bağımsız olarak)
-    if (year && year !== "all") {
-      url += `/${year}`;
-      if (month && month !== "all") {
-        url += `/${month.padStart(2, "0")}`;
-        if (day && day !== "all") {
-          url += `/${day.padStart(2, "0")}`;
-          if (page > 1) url += `/${page}`;
+      
+      // Kaynak seçildiğinde tarih parametrelerini query string olarak ekle
+      const params = new URLSearchParams();
+      if (year && year !== "all") {
+        params.set("year", year);
+        if (month && month !== "all") {
+          params.set("month", month);
+          if (day && day !== "all") {
+            params.set("day", day);
+          }
         }
       }
-    }
+      if (page > 1) {
+        params.set("page", page.toString());
+      }
+      if (category && category !== "all") {
+        params.set("category", category);
+      }
+      if (params.toString()) {
+        url += "?" + params.toString();
+      }
+    } else {
+      // Kaynak seçilmediğinde normal tarih URL yapısını kullan
+      if (year && year !== "all") {
+        url += `/${year}`;
+        if (month && month !== "all") {
+          url += `/${month.padStart(2, "0")}`;
+          if (day && day !== "all") {
+            url += `/${day.padStart(2, "0")}`;
+            if (page > 1) url += `/${page}`;
+          }
+        }
+      }
 
-    // Kategori parametresini query string olarak ekle
-    const params = new URLSearchParams();
-    if (category && category !== "all") {
-      params.set("category", category);
-    }
-    if (params.toString()) {
-      url += (url.includes("?") ? "&" : "?") + params.toString();
+      // Kategori parametresini query string olarak ekle
+      const params = new URLSearchParams();
+      if (category && category !== "all") {
+        params.set("category", category);
+      }
+      if (params.toString()) {
+        url += (url.includes("?") ? "&" : "?") + params.toString();
+      }
     }
 
     return url || "/";
@@ -806,7 +827,7 @@ export default function NewsApp({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-        </div>katag
+        </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-gray-600">
           <span>
@@ -1134,27 +1155,37 @@ export default function NewsApp({
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
     
-    // URL'den kategori parametresini oku; parametre yoksa mevcut state'i koru
+    // URL'den query parametrelerini oku
     const categoryFromUrl = searchParams.get("category");
+    const yearFromUrl = searchParams.get("year");
+    const monthFromUrl = searchParams.get("month");
+    const dayFromUrl = searchParams.get("day");
+    const pageFromUrl = searchParams.get("page");
 
-    setSelectedSource(safeSource);
-    setSelectedYear(safeYear);
-    setSelectedMonth(safeMonth);
-    setSelectedDay(parseDayFromInitial(safeDay));
+    // Query parametreleri varsa onları kullan, yoksa props'ları kullan
+    const finalSource = safeSource;
+    const finalYear = yearFromUrl || safeYear;
+    const finalMonth = monthFromUrl || safeMonth;
+    const finalDay = dayFromUrl || parseDayFromInitial(safeDay);
+    const finalPage = pageFromUrl ? parseInt(pageFromUrl) : safePage;
+    const finalCategory = categoryFromUrl || selectedCategory;
+
+    setSelectedSource(finalSource);
+    setSelectedYear(finalYear);
+    setSelectedMonth(finalMonth);
+    setSelectedDay(parseDayFromInitial(finalDay));
     if (categoryFromUrl !== null) {
       setSelectedCategory(categoryFromUrl);
     }
-    setCurrentPage(safePage);
+    setCurrentPage(finalPage);
 
     // Direkt fetch et - timeout yok
-    // Kategori parametresi yoksa mevcut state'i kullan, varsa yeni değeri kullan
-    const categoryToUse = categoryFromUrl !== null ? categoryFromUrl : selectedCategory;
-    fetchNews(safePage, {
-      source: safeSource,
-      category: categoryToUse,
-      year: safeYear,
-      month: safeMonth,
-      day: parseDayFromInitial(safeDay)
+    fetchNews(finalPage, {
+      source: finalSource,
+      category: finalCategory,
+      year: finalYear,
+      month: finalMonth,
+      day: parseDayFromInitial(finalDay)
     });
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage, searchParams]);
 
