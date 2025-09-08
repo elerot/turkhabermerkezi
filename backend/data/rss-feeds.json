@@ -2140,5 +2140,180 @@
     "url": "http://www.ekoseyir.com/rss/piyasalar/248.xml",
     "aktif": true,
     "priority": 4
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Dünya",
+    "url": "https://www.cnnturk.com/feed/rss/dunya/news",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Gündem",
+    "url": "https://www.milliyet.com.tr/rss/rssnew/gundem.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Son Dakika",
+    "url": "https://www.cumhuriyet.com.tr/rss/son_dakika.xml",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Manşet",
+    "url": "https://www.trthaber.com/manset_articles.rss",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "AA (Anadolu Ajansı)",
+    "kategori": "Güncel",
+    "url": "https://www.aa.com.tr/tr/rss/default?cat=guncel",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Akşam",
+    "kategori": "Genel",
+    "url": "https://www.aksam.com.tr/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Star",
+    "kategori": "Genel",
+    "url": "https://www.star.com.tr/rss/rss.asp",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Fotomaç",
+    "kategori": "Genel",
+    "url": "https://www.fotomac.com.tr/rss/anasayfa.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Diken",
+    "kategori": "Genel",
+    "url": "https://www.diken.com.tr/feed/",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "T24",
+    "kategori": "Genel",
+    "url": "https://t24.com.tr/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "BirGün",
+    "kategori": "Genel",
+    "url": "https://www.birgun.net/xml/rss.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Evrensel",
+    "kategori": "Genel",
+    "url": "https://www.evrensel.net/rss/haber.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Yurt Gazetesi",
+    "kategori": "Genel",
+    "url": "https://www.yurtgazetesi.com.tr/service/rss.php",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Gazete Duvar",
+    "kategori": "Genel",
+    "url": "https://www.gazeteduvar.com.tr/feed",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "İnternet Haber",
+    "kategori": "Genel",
+    "url": "https://www.internethaber.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Son Dakika",
+    "url": "https://www.mynet.com/haber/rss/sondakika",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "A Haber",
+    "kategori": "Genel",
+    "url": "https://www.ahaber.com.tr/rss/anasayfa.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Bloomberg HT",
+    "kategori": "Genel",
+    "url": "https://www.bloomberght.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "BBC Türkçe",
+    "kategori": "Genel",
+    "url": "https://www.bbc.com/turkce/index.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "OdaTV",
+    "kategori": "Genel",
+    "url": "https://www.odatv4.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "HaberX",
+    "kategori": "Genel",
+    "url": "https://www.haberx.com/feed",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Gerçek Gündem",
+    "kategori": "Genel",
+    "url": "https://www.gercekgundem.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Vatan Gazetesi",
+    "kategori": "Gündem",
+    "url": "https://www.gazetevatan.com/rss/gundem.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Türkgün",
+    "kategori": "Genel",
+    "url": "https://www.turkgun.com/rss/news",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Ortadoğu Gazetesi",
+    "kategori": "Genel",
+    "url": "https://www.ortadogugazetesi.com/rss",
+    "aktif": true,
+    "priority": 3
   }
 ]
