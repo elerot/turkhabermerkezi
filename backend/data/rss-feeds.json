@@ -1,40 +1,5 @@
 [
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Manşet",
-    "url": "https://www.trthaber.com/manset_articles.rss",
-    "aktif": true,
-    "priority": 1
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Son Dakika",
-    "url": "https://www.trthaber.com/sondakika_articles.rss",
-    "aktif": true,
-    "priority": 1
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Gündem",
-    "url": "https://www.trthaber.com/gundem_articles.rss",
-    "aktif": true,
-    "priority": 1
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Ekonomi",
-    "url": "https://www.trthaber.com/ekonomi_articles.rss",
-    "aktif": true,
-    "priority": 2
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Spor",
-    "url": "https://www.trthaber.com/spor_articles.rss",
-    "aktif": true,
-    "priority": 2
-  },
-  {
     "kaynak": "Habertürk",
     "kategori": "Genel",
     "url": "https://www.haberturk.com/rss",
@@ -1155,1003 +1120,1024 @@
     "priority": 4
   },
   {
-    "kaynak": "Test Haber",
-    "kategori": "Test",
-    "url": "https://www.example.com/rss/test.xml",
-    "aktif": false,
+    "kaynak": "NTV",
+    "kategori": "Gündem",
+    "url": "https://www.ntv.com.tr/gundem.rss",
+    "aktif": true,
     "priority": 1
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Siyaset",
-    "url": "https://www.trthaber.com/siyaset_articles.rss",
+    "kaynak": "NTV",
+    "kategori": "Dünya Kupası 2018",
+    "url": "https://www.ntv.com.tr/dunya-kupasi-2018.rss",
     "aktif": true,
-    "priority": 2
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
+    "kaynak": "NTV",
+    "kategori": "Türkiye",
+    "url": "https://www.ntv.com.tr/turkiye.rss",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "NTV",
     "kategori": "Dünya",
-    "url": "https://www.trthaber.com/dunya_articles.rss",
+    "url": "https://www.ntv.com.tr/dunya.rss",
     "aktif": true,
     "priority": 2
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Teknoloji",
-    "url": "https://www.trthaber.com/teknoloji_articles.rss",
+    "kaynak": "NTV",
+    "kategori": "Seyahat",
+    "url": "https://www.ntv.com.tr/seyahat.rss",
     "aktif": true,
-    "priority": 3
+    "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
+    "kaynak": "NTV",
     "kategori": "Sağlık",
-    "url": "https://www.trthaber.com/saglik_articles.rss",
-    "aktif": true,
-    "priority": 3
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Kültür Sanat",
-    "url": "https://www.trthaber.com/kultur-sanat_articles.rss",
+    "url": "https://www.ntv.com.tr/saglik.rss",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
+    "kaynak": "NTV",
+    "kategori": "Otomobil",
+    "url": "https://www.ntv.com.tr/otomobil.rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "NTV",
     "kategori": "Eğitim",
-    "url": "https://www.trthaber.com/egitim_articles.rss",
+    "url": "https://www.ntv.com.tr/egitim.rss",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Anayurt Gazetesi",
+    "kategori": "Son Dakika",
+    "url": "http://www.anayurtgazetesi.com/sondakika.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Son Dakika",
+    "url": "http://www.cumhuriyet.com.tr/rss/son_dakika.xml",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Siyaset",
+    "url": "http://www.cumhuriyet.com.tr/rss/6.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Ekonomi",
+    "url": "http://www.cumhuriyet.com.tr/rss/17.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Dünya",
+    "url": "http://www.cumhuriyet.com.tr/rss/73.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Spor",
+    "url": "http://www.cumhuriyet.com.tr/rss/24.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Kültür Sanat",
+    "url": "http://www.cumhuriyet.com.tr/rss/32.xml",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Çevre",
-    "url": "https://www.trthaber.com/cevre_articles.rss",
+    "kaynak": "Cumhuriyet",
+    "kategori": "Yaşam",
+    "url": "http://www.cumhuriyet.com.tr/rss/33.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Teknoloji",
+    "url": "http://www.cumhuriyet.com.tr/rss/34.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Sağlık",
+    "url": "http://www.cumhuriyet.com.tr/rss/35.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Eğitim",
+    "url": "http://www.cumhuriyet.com.tr/rss/36.xml",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Bilim",
-    "url": "https://www.trthaber.com/bilim_articles.rss",
+    "kaynak": "Cumhuriyet",
+    "kategori": "Magazin",
+    "url": "http://www.cumhuriyet.com.tr/rss/46.xml",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
+    "kaynak": "Cumhuriyet",
+    "kategori": "Gündem",
+    "url": "http://www.cumhuriyet.com.tr/rss/70.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Dünya",
+    "url": "http://www.cumhuriyet.com.tr/rss/19.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Ekonomi",
+    "url": "http://www.cumhuriyet.com.tr/rss/7.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Spor",
+    "url": "http://www.cumhuriyet.com.tr/rss/14.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Kültür Sanat",
+    "url": "http://www.cumhuriyet.com.tr/rss/15.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Yaşam",
+    "url": "http://www.cumhuriyet.com.tr/rss/16.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Teknoloji",
+    "url": "http://www.cumhuriyet.com.tr/rss/20.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Gündem",
+    "url": "http://www.cumhuriyet.com.tr/rss/72.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Siyaset",
+    "url": "http://www.cumhuriyet.com.tr/rss/12.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Ekonomi",
+    "url": "http://www.cumhuriyet.com.tr/rss/3.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Dünya",
+    "url": "http://www.cumhuriyet.com.tr/rss/9.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Spor",
+    "url": "http://www.cumhuriyet.com.tr/rss/11.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Cumhuriyet",
+    "kategori": "Kültür Sanat",
+    "url": "http://www.cumhuriyet.com.tr/rss/10.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Dünya Gazetesi",
+    "kategori": "Genel",
+    "url": "https://www.dunya.com/rss?dunya",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Hürriyet",
+    "kategori": "Astroloji",
+    "url": "http://www.hurriyet.com.tr/rss/astroloji",
+    "aktif": true,
+    "priority": 6
+  },
+  {
+    "kaynak": "Milat Gazetesi",
+    "kategori": "Genel",
+    "url": "http://www.milatgazetesi.com/rss.php",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Kitap",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/kitapRss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Siyaset",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/siyasetRss.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Otomobil",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/otomobilRss.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Tatil",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/milliyettatilRss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Konut Emlak",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/konutemlakRss.xml",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Aile",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/aileRss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Yemek",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/yemekRss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Diyet",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/diyetRss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Milliyet",
+    "kategori": "Son Dakika",
+    "url": "http://www.milliyet.com.tr/rss/rssNew/SonDakikaRss.xml",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Sabah",
     "kategori": "Turizm",
-    "url": "https://www.trthaber.com/turizm_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Enerji",
-    "url": "https://www.trthaber.com/enerji_articles.rss",
+    "url": "https://www.sabah.com.tr/rss/turizm.xml",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Ulaşım",
-    "url": "https://www.trthaber.com/ulasim_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Güvenlik",
-    "url": "https://www.trthaber.com/guvenlik_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Günün İçinden",
+    "url": "https://www.sabah.com.tr/rss/gununicinden.xml",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Hukuk",
-    "url": "https://www.trthaber.com/hukuk_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Galatasaray",
+    "url": "https://www.sabah.com.tr/rss/galatasaray.xml",
     "aktif": true,
-    "priority": 4
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Sosyal Medya",
-    "url": "https://www.trthaber.com/sosyal-medya_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Fenerbahçe",
+    "url": "https://www.sabah.com.tr/rss/fenerbahce.xml",
     "aktif": true,
-    "priority": 5
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "İnsan Hakları",
-    "url": "https://www.trthaber.com/insan-haklari_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Beşiktaş",
+    "url": "https://www.sabah.com.tr/rss/besiktas.xml",
     "aktif": true,
-    "priority": 4
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Kadın",
-    "url": "https://www.trthaber.com/kadin_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Trabzonspor",
+    "url": "https://www.sabah.com.tr/rss/trabzonspor.xml",
     "aktif": true,
-    "priority": 4
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Çocuk",
-    "url": "https://www.trthaber.com/cocuk_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Bursaspor",
+    "url": "https://www.sabah.com.tr/rss/bursaspor.xml",
     "aktif": true,
-    "priority": 5
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Gençlik",
-    "url": "https://www.trthaber.com/genclik_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Oyun",
+    "url": "https://www.sabah.com.tr/rss/oyun.xml",
     "aktif": true,
-    "priority": 5
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Yaşlı",
-    "url": "https://www.trthaber.com/yasli_articles.rss",
+    "kaynak": "Sabah",
+    "kategori": "Adana",
+    "url": "https://www.sabah.com.tr/rss/adana.xml",
     "aktif": true,
-    "priority": 5
+    "priority": 6
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Engelli",
-    "url": "https://www.trthaber.com/engelli_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Gündem",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=500",
     "aktif": true,
-    "priority": 5
+    "priority": 2
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Göç",
-    "url": "https://www.trthaber.com/goc_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Siyaset",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=13",
     "aktif": true,
-    "priority": 4
+    "priority": 2
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Afet",
-    "url": "https://www.trthaber.com/afet_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Ekonomi",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=15",
     "aktif": true,
-    "priority": 3
+    "priority": 2
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "İklim",
-    "url": "https://www.trthaber.com/iklim_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Dünya",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=16",
     "aktif": true,
-    "priority": 4
+    "priority": 2
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Tarım",
-    "url": "https://www.trthaber.com/tarim_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Hayvancılık",
-    "url": "https://www.trthaber.com/hayvancilik_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Balıkçılık",
-    "url": "https://www.trthaber.com/balikcilik_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Orman",
-    "url": "https://www.trthaber.com/orman_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Su",
-    "url": "https://www.trthaber.com/su_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Hava",
-    "url": "https://www.trthaber.com/hava_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Toprak",
-    "url": "https://www.trthaber.com/toprak_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Maden",
-    "url": "https://www.trthaber.com/maden_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "İnşaat",
-    "url": "https://www.trthaber.com/insaat_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Gayrimenkul",
-    "url": "https://www.trthaber.com/gayrimenkul_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Finans",
-    "url": "https://www.trthaber.com/finans_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Spor",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=17",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Borsa",
-    "url": "https://www.trthaber.com/borsa_articles.rss",
+    "kaynak": "Star",
+    "kategori": "Kültür Sanat",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=19",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Star",
+    "kategori": "Magazin",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=125",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Star",
+    "kategori": "Teknoloji",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=223",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Star",
+    "kategori": "Yaşam",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=130",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Star",
+    "kategori": "Sağlık",
+    "url": "http://www.star.com.tr/rss/rss.asp?cid=170",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Takvim",
+    "kategori": "Son 24 Saat",
+    "url": "https://www.takvim.com.tr/rss/son24saat.xml",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Takvim",
+    "kategori": "Güncel",
+    "url": "https://www.takvim.com.tr/rss/guncel.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Takvim",
+    "kategori": "Saklambaç",
+    "url": "https://www.takvim.com.tr/rss/saklambac.xml",
+    "aktif": true,
+    "priority": 6
+  },
+  {
+    "kaynak": "Takvim",
+    "kategori": "Video",
+    "url": "https://www.takvim.com.tr/rss/video.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Takvim",
+    "kategori": "Televizyon",
+    "url": "https://www.takvim.com.tr/rss/televizyon.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Vatan Gazetesi",
+    "kategori": "Genel",
+    "url": "http://mix.chimpfeedr.com/68482-Vatan-Gazetesi",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Döviz",
-    "url": "https://www.trthaber.com/doviz_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Günün Manşetleri",
+    "url": "https://www.yeniakit.com.tr/rss/haber/gunun-mansetleri",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Yeni Akit",
+    "kategori": "Bugünkü Akit",
+    "url": "https://www.yeniakit.com.tr/rss/haber/bugunku-akit",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Yeni Akit",
+    "kategori": "Özel Haber",
+    "url": "https://www.yeniakit.com.tr/rss/haber/ozel-haber",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Yeni Akit",
+    "kategori": "Aktüel",
+    "url": "https://www.yeniakit.com.tr/rss/haber/aktuel",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Altın",
-    "url": "https://www.trthaber.com/altin_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Petrol",
-    "url": "https://www.trthaber.com/petrol_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Doğalgaz",
-    "url": "https://www.trthaber.com/dogalgaz_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Kömür",
-    "url": "https://www.trthaber.com/komur_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Nükleer",
-    "url": "https://www.trthaber.com/nukleer_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Yenilenebilir Enerji",
-    "url": "https://www.trthaber.com/yenilenebilir-enerji_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Güneş Enerjisi",
-    "url": "https://www.trthaber.com/gunes-enerjisi_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Rüzgar Enerjisi",
-    "url": "https://www.trthaber.com/ruzgar-enerjisi_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Hidroelektrik",
-    "url": "https://www.trthaber.com/hidroelektrik_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Jeotermal",
-    "url": "https://www.trthaber.com/jeotermal_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Biyokütle",
-    "url": "https://www.trthaber.com/biyokutle_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Hidrojen",
-    "url": "https://www.trthaber.com/hidrojen_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Elektrikli Araç",
-    "url": "https://www.trthaber.com/elektrikli-arac_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
+    "kaynak": "Yeni Akit",
     "kategori": "Otomotiv",
-    "url": "https://www.trthaber.com/otomotiv_articles.rss",
+    "url": "https://www.yeniakit.com.tr/rss/haber/otomotiv",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Havacılık",
-    "url": "https://www.trthaber.com/havacilik_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Emlak",
+    "url": "https://www.yeniakit.com.tr/rss/haber/emlak",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Denizcilik",
-    "url": "https://www.trthaber.com/denizcilik_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Medya",
+    "url": "https://www.yeniakit.com.tr/rss/haber/medya",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Demiryolu",
-    "url": "https://www.trthaber.com/demiryolu_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Karayolu",
-    "url": "https://www.trthaber.com/karayolu_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Metro",
-    "url": "https://www.trthaber.com/metro_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Tramvay",
-    "url": "https://www.trthaber.com/tramvay_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Yerel",
+    "url": "https://www.yeniakit.com.tr/rss/haber/yerel",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Otobüs",
-    "url": "https://www.trthaber.com/otobus_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Bilim Teknoloji",
+    "url": "https://www.yeniakit.com.tr/rss/video/bilim-teknoloji",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Taksi",
-    "url": "https://www.trthaber.com/taksi_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - 15 Temmuz",
+    "url": "https://www.yeniakit.com.tr/rss/video/15temmuz",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Bisiklet",
-    "url": "https://www.trthaber.com/bisiklet_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Çocuk Eğitim",
+    "url": "https://www.yeniakit.com.tr/rss/video/cocuk-egitim",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Motosiklet",
-    "url": "https://www.trthaber.com/motosiklet_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Emlak Rehberi",
+    "url": "https://www.yeniakit.com.tr/rss/video/emlak-rehberi",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Kamyon",
-    "url": "https://www.trthaber.com/kamyon_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Gezi",
+    "url": "https://www.yeniakit.com.tr/rss/video/gezi",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Kamyonet",
-    "url": "https://www.trthaber.com/kamyonet_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Hayat Aktüel",
+    "url": "https://www.yeniakit.com.tr/rss/video/hayat-aktuel",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Minibüs",
-    "url": "https://www.trthaber.com/minibus_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - İslam",
+    "url": "https://www.yeniakit.com.tr/rss/video/islam",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Dolmuş",
-    "url": "https://www.trthaber.com/dolmus_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Ramazan",
+    "url": "https://www.yeniakit.com.tr/rss/video/ramazan",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Teleferik",
-    "url": "https://www.trthaber.com/teleferik_articles.rss",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Trafik Kazaları",
+    "url": "https://www.yeniakit.com.tr/rss/video/trafik-kazalari",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "TRT Haber",
-    "kategori": "Füniküler",
-    "url": "https://www.trthaber.com/funikuler_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Asansör",
-    "url": "https://www.trthaber.com/asansor_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Yürüyen Merdiven",
-    "url": "https://www.trthaber.com/yuruyen-merdiven_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Yürüyen Bant",
-    "url": "https://www.trthaber.com/yuruyen-bant_articles.rss",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Köprü",
-    "url": "https://www.trthaber.com/kopru_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Tünel",
-    "url": "https://www.trthaber.com/tunel_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "Baraj",
-    "url": "https://www.trthaber.com/baraj_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "HES",
-    "url": "https://www.trthaber.com/hes_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "GES",
-    "url": "https://www.trthaber.com/ges_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "RES",
-    "url": "https://www.trthaber.com/res_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "JES",
-    "url": "https://www.trthaber.com/jes_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "TRT Haber",
-    "kategori": "BES",
-    "url": "https://www.trthaber.com/bes_articles.rss",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Bilim",
-    "url": "https://www.haberturk.com/rss/kategori/bilim.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Çevre",
-    "url": "https://www.haberturk.com/rss/kategori/cevre.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Turizm",
-    "url": "https://www.haberturk.com/rss/kategori/turizm.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Enerji",
-    "url": "https://www.haberturk.com/rss/kategori/enerji.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Ulaşım",
-    "url": "https://www.haberturk.com/rss/kategori/ulasim.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Güvenlik",
-    "url": "https://www.haberturk.com/rss/kategori/guvenlik.xml",
+    "kaynak": "Yeni Akit",
+    "kategori": "Video - Türkiye",
+    "url": "https://www.yeniakit.com.tr/rss/video/turkiye",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Hukuk",
-    "url": "https://www.haberturk.com/rss/kategori/hukuk.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Sosyal Medya",
-    "url": "https://www.haberturk.com/rss/kategori/sosyal-medya.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "İnsan Hakları",
-    "url": "https://www.haberturk.com/rss/kategori/insan-haklari.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Çocuk",
-    "url": "https://www.haberturk.com/rss/kategori/cocuk.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Gençlik",
-    "url": "https://www.haberturk.com/rss/kategori/genclik.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Yaşlı",
-    "url": "https://www.haberturk.com/rss/kategori/yasli.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Engelli",
-    "url": "https://www.haberturk.com/rss/kategori/engelli.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Göç",
-    "url": "https://www.haberturk.com/rss/kategori/goc.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Afet",
-    "url": "https://www.haberturk.com/rss/kategori/afet.xml",
+    "kaynak": "Yeni Asır",
+    "kategori": "Anasayfa",
+    "url": "https://www.yeniasir.com.tr/rss/anasayfa.xml",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "İklim",
-    "url": "https://www.haberturk.com/rss/kategori/iklim.xml",
+    "kaynak": "Yeni Mesaj",
+    "kategori": "Genel",
+    "url": "http://www.yenimesaj.com.tr/rss.php",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Tarım",
-    "url": "https://www.haberturk.com/rss/kategori/tarim.xml",
+    "kaynak": "Yurt Gazetesi",
+    "kategori": "Genel",
+    "url": "http://www.yurtgazetesi.com.tr/rss.php",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Hayvancılık",
-    "url": "https://www.haberturk.com/rss/kategori/hayvancilik.xml",
+    "kaynak": "A Haber",
+    "kategori": "Din",
+    "url": "https://www.ahaber.com.tr/rss/din.xml",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Balıkçılık",
-    "url": "https://www.haberturk.com/rss/kategori/balikcilik.xml",
+    "kaynak": "A Haber",
+    "kategori": "Tarih",
+    "url": "https://www.ahaber.com.tr/rss/tarih.xml",
     "aktif": true,
     "priority": 5
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Orman",
-    "url": "https://www.haberturk.com/rss/kategori/orman.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Su",
-    "url": "https://www.haberturk.com/rss/kategori/su.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Hava",
-    "url": "https://www.haberturk.com/rss/kategori/hava.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Toprak",
-    "url": "https://www.haberturk.com/rss/kategori/toprak.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Maden",
-    "url": "https://www.haberturk.com/rss/kategori/maden.xml",
+    "kaynak": "A Haber",
+    "kategori": "Analiz",
+    "url": "https://www.ahaber.com.tr/rss/analiz.xml",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "İnşaat",
-    "url": "https://www.haberturk.com/rss/kategori/insaat.xml",
+    "kaynak": "CNN Türk",
+    "kategori": "Türkiye",
+    "url": "https://www.cnnturk.com/feed/rss/turkiye/news",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Kültür Sanat",
+    "url": "https://www.cnnturk.com/feed/rss/kultur-sanat/news",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Gayrimenkul",
-    "url": "https://www.haberturk.com/rss/kategori/gayrimenkul.xml",
+    "kaynak": "CNN Türk",
+    "kategori": "Bilim Teknoloji",
+    "url": "https://www.cnnturk.com/feed/rss/bilim-teknoloji/news",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Finans",
-    "url": "https://www.haberturk.com/rss/kategori/finans.xml",
+    "kaynak": "CNN Türk",
+    "kategori": "Otomobil",
+    "url": "https://www.cnnturk.com/feed/rss/otomobil/news",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Seyahat",
+    "url": "https://www.cnnturk.com/feed/rss/seyahat/news",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Tümü",
+    "url": "https://www.cnnturk.com/feed/rss/all/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Türkiye",
+    "url": "https://www.cnnturk.com/feed/rss/turkiye/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Dünya",
+    "url": "https://www.cnnturk.com/feed/rss/dunya/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Kültür Sanat",
+    "url": "https://www.cnnturk.com/feed/rss/kultur-sanat/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Bilim Teknoloji",
+    "url": "https://www.cnnturk.com/feed/rss/bilim-teknoloji/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Yaşam",
+    "url": "https://www.cnnturk.com/feed/rss/yasam/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Magazin",
+    "url": "https://www.cnnturk.com/feed/rss/magazin/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Ekonomi",
+    "url": "https://www.cnnturk.com/feed/rss/ekonomi/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Spor",
+    "url": "https://www.cnnturk.com/feed/rss/spor/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Sağlık",
+    "url": "https://www.cnnturk.com/feed/rss/saglik/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Otomobil",
+    "url": "https://www.cnnturk.com/feed/rss/otomobil/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Video - Seyahat",
+    "url": "https://www.cnnturk.com/feed/rss/seyahat/video",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Tümü",
+    "url": "https://www.cnnturk.com/feed/rss/all/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Türkiye",
+    "url": "https://www.cnnturk.com/feed/rss/turkiye/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Dünya",
+    "url": "https://www.cnnturk.com/feed/rss/dunya/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Kültür Sanat",
+    "url": "https://www.cnnturk.com/feed/rss/kultur-sanat/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Bilim Teknoloji",
+    "url": "https://www.cnnturk.com/feed/rss/bilim-teknoloji/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Yaşam",
+    "url": "https://www.cnnturk.com/feed/rss/yasam/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Magazin",
+    "url": "https://www.cnnturk.com/feed/rss/magazin/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Ekonomi",
+    "url": "https://www.cnnturk.com/feed/rss/ekonomi/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Spor",
+    "url": "https://www.cnnturk.com/feed/rss/spor/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Sağlık",
+    "url": "https://www.cnnturk.com/feed/rss/saglik/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Otomobil",
+    "url": "https://www.cnnturk.com/feed/rss/otomobil/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "CNN Türk",
+    "kategori": "Galeri - Seyahat",
+    "url": "https://www.cnnturk.com/feed/rss/seyahat/gallery",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "TRT Haber",
+    "kategori": "Son Dakika",
+    "url": "http://www.trthaber.com/sondakika.rss",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Ulusal",
+    "kategori": "Genel",
+    "url": "http://www.ulusal.com.tr/rss.php",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Açık Gazete",
+    "kategori": "Genel",
+    "url": "https://www.acikgazete.com/feed/",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Ajans Haber",
+    "kategori": "Genel",
+    "url": "https://www.ajanshaber.com/rss",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Borsa",
-    "url": "https://www.haberturk.com/rss/kategori/borsa.xml",
+    "kaynak": "AY Gazete",
+    "kategori": "Gündem",
+    "url": "http://www.aygazete.com/rss/gundem-haberleri",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Döviz",
-    "url": "https://www.haberturk.com/rss/kategori/doviz.xml",
+    "kaynak": "BBC Türkçe",
+    "kategori": "Genel",
+    "url": "http://feeds.bbci.co.uk/turkce/rss.xml",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Deutsche Welle",
+    "kategori": "Genel",
+    "url": "http://rss.dw.com/rdf/rss-tur-all",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Magazin",
+    "url": "https://www.mynet.com/magazin/rss",
+    "aktif": true,
+    "priority": 4
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Sinema",
+    "url": "http://sinema.mynet.com/rss/RSS-enyeniler/rss.xml",
+    "aktif": true,
+    "priority": 5
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Spor",
+    "url": "http://spor.mynet.com/rss",
     "aktif": true,
     "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Altın",
-    "url": "https://www.haberturk.com/rss/kategori/altin.xml",
+    "kaynak": "Mynet",
+    "kategori": "Son Dakika",
+    "url": "http://www.mynet.com/haber/rss/sondakika",
+    "aktif": true,
+    "priority": 1
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Günün Özeti",
+    "url": "http://www.mynet.com/haber/rss/gununozeti/",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Politika",
+    "url": "http://www.mynet.com/haber/rss/kategori/politika/",
+    "aktif": true,
+    "priority": 2
+  },
+  {
+    "kaynak": "Mynet",
+    "kategori": "Yerel Haber",
+    "url": "http://yurthaber.mynet.com/rss/kategori/ana/rss.xml",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Petrol",
-    "url": "https://www.haberturk.com/rss/kategori/petrol.xml",
+    "kaynak": "Sputnik Türkçe",
+    "kategori": "Genel",
+    "url": "https://tr.sputniknews.com/export/rss2/archive/index.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Türkiye Haber Ajansı",
+    "kategori": "Genel",
+    "url": "http://www.turkiyehaberajansi.com/rss.xml",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "İnternet Haber",
+    "kategori": "Genel",
+    "url": "http://www.internethaber.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "Finans Gündem",
+    "kategori": "Genel",
+    "url": "http://www.finansgundem.com/rss",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TOBB",
+    "kategori": "Haberler",
+    "url": "https://www.tobb.org.tr/Sayfalar/RssFeeder.php?List=Haberler",
+    "aktif": true,
+    "priority": 3
+  },
+  {
+    "kaynak": "TOBB",
+    "kategori": "Duyurular",
+    "url": "https://www.tobb.org.tr/Sayfalar/RssFeeder.php?List=DuyurularListesi",
     "aktif": true,
     "priority": 4
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Doğalgaz",
-    "url": "https://www.haberturk.com/rss/kategori/dogalgaz.xml",
+    "kaynak": "TOBB",
+    "kategori": "Manşet",
+    "url": "https://www.tobb.org.tr/Sayfalar/RssFeeder.php?List=MansetListesi",
     "aktif": true,
-    "priority": 4
+    "priority": 2
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Kömür",
-    "url": "https://www.haberturk.com/rss/kategori/komur.xml",
+    "kaynak": "Big Para",
+    "kategori": "Genel",
+    "url": "http://bigpara.hurriyet.com.tr/rss/",
     "aktif": true,
-    "priority": 5
+    "priority": 3
   },
   {
-    "kaynak": "Habertürk",
-    "kategori": "Nükleer",
-    "url": "https://www.haberturk.com/rss/kategori/nukleer.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Yenilenebilir Enerji",
-    "url": "https://www.haberturk.com/rss/kategori/yenilenebilir-enerji.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Güneş Enerjisi",
-    "url": "https://www.haberturk.com/rss/kategori/gunes-enerjisi.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Rüzgar Enerjisi",
-    "url": "https://www.haberturk.com/rss/kategori/ruzgar-enerjisi.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Hidroelektrik",
-    "url": "https://www.haberturk.com/rss/kategori/hidroelektrik.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Jeotermal",
-    "url": "https://www.haberturk.com/rss/kategori/jeotermal.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Biyokütle",
-    "url": "https://www.haberturk.com/rss/kategori/biyokutle.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Hidrojen",
-    "url": "https://www.haberturk.com/rss/kategori/hidrojen.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Elektrikli Araç",
-    "url": "https://www.haberturk.com/rss/kategori/elektrikli-arac.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Otomotiv",
-    "url": "https://www.haberturk.com/rss/kategori/otomotiv.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Havacılık",
-    "url": "https://www.haberturk.com/rss/kategori/havacilik.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Denizcilik",
-    "url": "https://www.haberturk.com/rss/kategori/denizcilik.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Demiryolu",
-    "url": "https://www.haberturk.com/rss/kategori/demiryolu.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Karayolu",
-    "url": "https://www.haberturk.com/rss/kategori/karayolu.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Metro",
-    "url": "https://www.haberturk.com/rss/kategori/metro.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Tramvay",
-    "url": "https://www.haberturk.com/rss/kategori/tramvay.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Otobüs",
-    "url": "https://www.haberturk.com/rss/kategori/otobus.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Taksi",
-    "url": "https://www.haberturk.com/rss/kategori/taksi.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Bisiklet",
-    "url": "https://www.haberturk.com/rss/kategori/bisiklet.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Motosiklet",
-    "url": "https://www.haberturk.com/rss/kategori/motosiklet.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Kamyon",
-    "url": "https://www.haberturk.com/rss/kategori/kamyon.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Kamyonet",
-    "url": "https://www.haberturk.com/rss/kategori/kamyonet.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Minibüs",
-    "url": "https://www.haberturk.com/rss/kategori/minibus.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Dolmuş",
-    "url": "https://www.haberturk.com/rss/kategori/dolmus.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Teleferik",
-    "url": "https://www.haberturk.com/rss/kategori/teleferik.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Füniküler",
-    "url": "https://www.haberturk.com/rss/kategori/funikuler.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Asansör",
-    "url": "https://www.haberturk.com/rss/kategori/asansor.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Yürüyen Merdiven",
-    "url": "https://www.haberturk.com/rss/kategori/yuruyen-merdiven.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Yürüyen Bant",
-    "url": "https://www.haberturk.com/rss/kategori/yuruyen-bant.xml",
-    "aktif": true,
-    "priority": 5
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Köprü",
-    "url": "https://www.haberturk.com/rss/kategori/kopru.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Tünel",
-    "url": "https://www.haberturk.com/rss/kategori/tunel.xml",
-    "aktif": true,
-    "priority": 4
-  },
-  {
-    "kaynak": "Habertürk",
-    "kategori": "Baraj",
-    "url": "https://www.haberturk.com/rss/kategori/baraj.xml",
+    "kaynak": "Ekoseyir",
+    "kategori": "Piyasalar",
+    "url": "http://www.ekoseyir.com/rss/piyasalar/248.xml",
     "aktif": true,
     "priority": 4
   }
