@@ -493,19 +493,35 @@ export default function NewsApp({
   };
 
   // Fetch functions
-  const fetchNews = async (page = 1) => {
+  const fetchNews = async (page = 1, overrides: {
+    source?: string;
+    category?: string;
+    year?: string;
+    month?: string;
+    day?: string;
+    search?: string;
+  } = {}) => {
     // NaN kontrolü - page NaN ise 1 kullan
     const safePage = isNaN(page) || page < 1 ? 1 : page;
 
     setLoading(true);
     try {
       let url = `${API_BASE}/news?page=${safePage}&limit=30`;
-      if (selectedSource && selectedSource !== "all") url += `&source=${encodeURIComponent(selectedSource)}`;
-      if (selectedCategory && selectedCategory !== "all") url += `&category=${encodeURIComponent(selectedCategory)}`;
-      if (selectedYear && selectedYear !== "all") url += `&year=${selectedYear}`;
-      if (selectedMonth && selectedMonth !== "all") url += `&month=${selectedMonth}`;
-      if (selectedDay && selectedDay !== "all") url += `&day=${selectedDay}`;
-      if (searchQuery && searchQuery.trim() !== "") url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+      
+      // Override değerleri varsa onları kullan, yoksa state'ten al
+      const source = overrides.source !== undefined ? overrides.source : selectedSource;
+      const category = overrides.category !== undefined ? overrides.category : selectedCategory;
+      const year = overrides.year !== undefined ? overrides.year : selectedYear;
+      const month = overrides.month !== undefined ? overrides.month : selectedMonth;
+      const day = overrides.day !== undefined ? overrides.day : selectedDay;
+      const search = overrides.search !== undefined ? overrides.search : searchQuery;
+      
+      if (source && source !== "all") url += `&source=${encodeURIComponent(source)}`;
+      if (category && category !== "all") url += `&category=${encodeURIComponent(category)}`;
+      if (year && year !== "all") url += `&year=${year}`;
+      if (month && month !== "all") url += `&month=${month}`;
+      if (day && day !== "all") url += `&day=${day}`;
+      if (search && search.trim() !== "") url += `&search=${encodeURIComponent(search.trim())}`;
 
       // console.log('🔄 Fetching news from:', url);
       
@@ -773,16 +789,24 @@ export default function NewsApp({
 
     return (
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-        <Button
-          variant="outline"
-          disabled={!currentPage || currentPage === 1}
-          onClick={() => handlePageChange((currentPage || 1) - 1)}
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Önceki
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            disabled={!currentPage || currentPage === 1}
+            onClick={() => handlePageChange(1)}
+            size="sm"
+          >
+            İlk
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!currentPage || currentPage === 1}
+            onClick={() => handlePageChange((currentPage || 1) - 1)}
+            size="sm"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>katag
 
         <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-gray-600">
           <span>
@@ -792,16 +816,41 @@ export default function NewsApp({
           <span>({pagination.count || 0} haber)</span>
         </div>
 
-        <Button
-          variant="outline"
-          disabled={!currentPage || !pagination.total || currentPage === pagination.total}
-          onClick={() => handlePageChange((currentPage || 1) + 1)}
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          Sonraki
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            disabled={!currentPage || !pagination.total || currentPage === pagination.total}
+            onClick={() => handlePageChange((currentPage || 1) + 1)}
+            size="sm"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!currentPage || !pagination.total || currentPage === pagination.total}
+            onClick={() => handlePageChange(pagination.total || 1)}
+            size="sm"
+          >
+            Son
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Git:</span>
+          <input
+            type="number"
+            min={1}
+            max={pagination.total || 1}
+            defaultValue={currentPage || 1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                const value = parseInt((e.target as HTMLInputElement).value);
+                if (!isNaN(value)) handlePageChange(value);
+              }
+            }}
+            className="w-16 px-2 py-1 border rounded text-sm"
+          />
+        </div>
       </div>
     );
   };
@@ -1085,18 +1134,28 @@ export default function NewsApp({
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
     
-    // URL'den kategori parametresini oku
-    const categoryFromUrl = searchParams.get("category") || "all";
+    // URL'den kategori parametresini oku; parametre yoksa mevcut state'i koru
+    const categoryFromUrl = searchParams.get("category");
 
     setSelectedSource(safeSource);
     setSelectedYear(safeYear);
     setSelectedMonth(safeMonth);
     setSelectedDay(parseDayFromInitial(safeDay));
-    setSelectedCategory(categoryFromUrl);
+    if (categoryFromUrl !== null) {
+      setSelectedCategory(categoryFromUrl);
+    }
     setCurrentPage(safePage);
 
     // Direkt fetch et - timeout yok
-    fetchNews(safePage);
+    // Kategori parametresi yoksa mevcut state'i kullan, varsa yeni değeri kullan
+    const categoryToUse = categoryFromUrl !== null ? categoryFromUrl : selectedCategory;
+    fetchNews(safePage, {
+      source: safeSource,
+      category: categoryToUse,
+      year: safeYear,
+      month: safeMonth,
+      day: parseDayFromInitial(safeDay)
+    });
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage, searchParams]);
 
   // Sayfa yenilendiğinde ve ekran boyutu değiştiğinde reklam pozisyonlarını yeniden oluştur
@@ -1550,6 +1609,16 @@ export default function NewsApp({
                       <Button
                         variant="outline"
                         disabled={!currentPage || currentPage === 1}
+                        onClick={() => handlePageChange(1)}
+                        size="sm"
+                        className="h-8 px-2"
+                        title="İlk sayfa"
+                      >
+                        İlk
+                      </Button>
+                      <Button
+                        variant="outline"
+                        disabled={!currentPage || currentPage === 1}
                         onClick={() => handlePageChange((currentPage || 1) - 1)}
                         size="sm"
                         className="h-8 px-2"
@@ -1566,6 +1635,32 @@ export default function NewsApp({
                       >
                         <ChevronRight className="h-3 w-3" />
                       </Button>
+                      <Button
+                        variant="outline"
+                        disabled={!currentPage || !pagination.total || currentPage === pagination.total}
+                        onClick={() => handlePageChange(pagination.total || 1)}
+                        size="sm"
+                        className="h-8 px-2"
+                        title="Son sayfa"
+                      >
+                        Son
+                      </Button>
+                      <div className="flex items-center gap-1 ml-2">
+                        <span className="text-xs text-gray-500">Git:</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={pagination.total || 1}
+                          defaultValue={currentPage || 1}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const value = parseInt((e.target as HTMLInputElement).value);
+                              if (!isNaN(value)) handlePageChange(value);
+                            }
+                          }}
+                          className="w-12 px-1 py-1 border rounded text-xs"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
