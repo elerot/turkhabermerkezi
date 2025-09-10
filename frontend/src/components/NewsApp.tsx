@@ -200,20 +200,29 @@ export default function NewsApp({
       const sourceSlug = createTurkishSlug(source);
       url = `/source/${sourceSlug}`;
       
-      // Kaynak seçildiğinde tarih parametrelerini query string olarak ekle
-      const params = new URLSearchParams();
+      // Kaynak seçildiğinde tarih parametrelerini URL segment'leri olarak ekle
       if (year && year !== "all") {
-        params.set("year", year);
+        url += `/${year}`;
         if (month && month !== "all") {
-          params.set("month", month);
+          url += `/${month.padStart(2, "0")}`;
           if (day && day !== "all") {
-            params.set("day", day);
+            url += `/${day.padStart(2, "0")}`;
+            if (page > 1) url += `/${page}`;
+          } else if (page > 1) {
+            // Ay seçildi ama gün seçilmedi, sayfa parametresini ekle
+            url += `/${page}`;
           }
+        } else if (page > 1) {
+          // Yıl seçildi ama ay seçilmedi, sayfa parametresini ekle
+          url += `/${page}`;
         }
+      } else if (page > 1) {
+        // Sadece kaynak seçildi, sayfa parametresini ekle
+        url += `/${page}`;
       }
-      if (page > 1) {
-        params.set("page", page.toString());
-      }
+
+      // Kategori parametresini query string olarak ekle
+      const params = new URLSearchParams();
       if (category && category !== "all") {
         params.set("category", category);
       }
@@ -1155,19 +1164,15 @@ export default function NewsApp({
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
     
-    // URL'den query parametrelerini oku
+    // URL'den query parametrelerini oku (sadece kategori)
     const categoryFromUrl = searchParams.get("category");
-    const yearFromUrl = searchParams.get("year");
-    const monthFromUrl = searchParams.get("month");
-    const dayFromUrl = searchParams.get("day");
-    const pageFromUrl = searchParams.get("page");
 
-    // Query parametreleri varsa onları kullan, yoksa props'ları kullan
+    // Props'ları kullan (URL segment'leri zaten props olarak geliyor)
     const finalSource = safeSource;
-    const finalYear = yearFromUrl || safeYear;
-    const finalMonth = monthFromUrl || safeMonth;
-    const finalDay = dayFromUrl || parseDayFromInitial(safeDay);
-    const finalPage = pageFromUrl ? parseInt(pageFromUrl) : safePage;
+    const finalYear = safeYear;
+    const finalMonth = safeMonth;
+    const finalDay = parseDayFromInitial(safeDay);
+    const finalPage = safePage;
     const finalCategory = categoryFromUrl || selectedCategory;
 
     setSelectedSource(finalSource);
