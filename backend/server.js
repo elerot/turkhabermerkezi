@@ -1612,55 +1612,165 @@ app.get("/api/stats", (req, res) => {
   });
 });
 
-// Cache status endpoint (for monitoring)
+// Cache status endpoint (for monitoring) - Enhanced version
 app.get("/api/cache-status", (req, res) => {
   const now = Date.now();
   const todayKey = getTodayKey();
+  const uptime = process.uptime();
+  const memory = process.memoryUsage();
+
+  // Helper function to format time
+  const formatTime = (ms) => {
+    if (!ms) return 'N/A';
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
+  };
+
+  // Helper function to format bytes
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Calculate cache efficiency
+  const todayTotal = (cache.todayNews.hits || 0) + (cache.todayNews.misses || 0);
+  const apiTotal = (cache.apiStats.hits || 0) + (cache.apiStats.misses || 0);
+  
+  const todayHitRate = todayTotal > 0 ? ((cache.todayNews.hits || 0) / todayTotal * 100).toFixed(1) : 0;
+  const apiHitRate = apiTotal > 0 ? ((cache.apiStats.hits || 0) / apiTotal * 100).toFixed(1) : 0;
+
+  // Calculate system health score (0-100)
+  const healthScore = (() => {
+    let score = 100;
+    
+    // Cache validity check
+    if (!isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL)) score -= 20;
+    if (!isCacheValid(cache.metadata, CACHE_CONFIG.METADATA_TTL)) score -= 10;
+    
+    // Hit rate check
+    if (todayHitRate < 50) score -= 15;
+    if (apiHitRate < 30) score -= 10;
+    
+    // Memory usage check
+    const memoryUsagePercent = (memory.heapUsed / memory.heapTotal) * 100;
+    if (memoryUsagePercent > 80) score -= 20;
+    else if (memoryUsagePercent > 60) score -= 10;
+    
+    return Math.max(0, score);
+  })();
+
+  const healthStatus = healthScore >= 80 ? '🟢 Excellent' : 
+                      healthScore >= 60 ? '🟡 Good' : 
+                      healthScore >= 40 ? '🟠 Fair' : '🔴 Poor';
 
   res.json({
-    cache_health: {
+    // System Overview
+    system: {
+      status: healthStatus,
+      health_score: healthScore,
+      uptime: {
+        seconds: Math.floor(uptime),
+        formatted: formatTime(uptime * 1000),
+        started_at: new Date(Date.now() - uptime * 1000).toISOString()
+      },
+      memory: {
+        used: formatBytes(memory.heapUsed),
+        total: formatBytes(memory.heapTotal),
+        usage_percent: ((memory.heapUsed / memory.heapTotal) * 100).toFixed(1) + '%',
+        external: formatBytes(memory.external),
+        rss: formatBytes(memory.rss)
+      }
+    },
+
+    // Cache Performance
+    cache_performance: {
+      overall_efficiency: {
+        today_news_hit_rate: todayHitRate + '%',
+        api_responses_hit_rate: apiHitRate + '%',
+        total_cache_requests: todayTotal + apiTotal,
+        total_hits: (cache.todayNews.hits || 0) + (cache.apiStats.hits || 0),
+        total_misses: (cache.todayNews.misses || 0) + (cache.apiStats.misses || 0)
+      },
       today_news: {
-        cached: !!cache.todayNews.data,
-        key: cache.todayNews.key,
-        expected_key: todayKey,
-        key_match: cache.todayNews.key === todayKey,
-        count: cache.todayNews.data ? cache.todayNews.data.length : 0,
-        age_ms: cache.todayNews.lastUpdate
-          ? now - cache.todayNews.lastUpdate
-          : null,
-        valid: isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL),
-        ttl_ms: CACHE_CONFIG.TODAY_TTL,
+        status: cache.todayNews.data ? '✅ Active' : '❌ Empty',
+        key_match: cache.todayNews.key === todayKey ? '✅ Match' : '❌ Mismatch',
+        article_count: cache.todayNews.data ? cache.todayNews.data.length : 0,
+        age: cache.todayNews.lastUpdate ? formatTime(now - cache.todayNews.lastUpdate) : 'N/A',
+        valid: isCacheValid(cache.todayNews, CACHE_CONFIG.TODAY_TTL) ? '✅ Valid' : '❌ Expired',
+        ttl: formatTime(CACHE_CONFIG.TODAY_TTL),
         hits: cache.todayNews.hits || 0,
         misses: cache.todayNews.misses || 0,
-        hit_rate: cache.todayNews.hits && cache.todayNews.misses 
-          ? (cache.todayNews.hits / (cache.todayNews.hits + cache.todayNews.misses) * 100).toFixed(2) + '%'
-          : '0%',
-        last_access: cache.todayNews.lastUpdate ? new Date(cache.todayNews.lastUpdate).toISOString() : null
+        hit_rate: todayHitRate + '%',
+        last_updated: cache.todayNews.lastUpdate ? new Date(cache.todayNews.lastUpdate).toISOString() : 'Never'
       },
       api_responses: {
-        count: cache.responses.size,
-        keys: Array.from(cache.responses.keys()).slice(0, 5), // Show first 5 keys
+        cached_count: cache.responses.size,
+        sample_keys: Array.from(cache.responses.keys()).slice(0, 3),
         hits: cache.apiStats.hits || 0,
         misses: cache.apiStats.misses || 0,
-        hit_rate: cache.apiStats.hits && cache.apiStats.misses 
-          ? (cache.apiStats.hits / (cache.apiStats.hits + cache.apiStats.misses) * 100).toFixed(2) + '%'
-          : '0%',
-        ttl_ms: CACHE_CONFIG.API_TTL,
+        hit_rate: apiHitRate + '%',
+        ttl: formatTime(CACHE_CONFIG.API_TTL)
       },
       archives: {
-        count: cache.archives.size,
-        keys: Array.from(cache.archives.keys()).slice(0, 5),
+        cached_count: cache.archives.size,
+        sample_keys: Array.from(cache.archives.keys()).slice(0, 3)
       },
       metadata: {
-        cached: !!cache.metadata.sources,
-        age_ms: cache.metadata.lastUpdate
-          ? now - cache.metadata.lastUpdate
-          : null,
-        valid: isCacheValid(cache.metadata, CACHE_CONFIG.METADATA_TTL),
-      },
+        status: cache.metadata.sources ? '✅ Cached' : '❌ Not cached',
+        age: cache.metadata.lastUpdate ? formatTime(now - cache.metadata.lastUpdate) : 'N/A',
+        valid: isCacheValid(cache.metadata, CACHE_CONFIG.METADATA_TTL) ? '✅ Valid' : '❌ Expired',
+        sources_count: cache.metadata.sources ? cache.metadata.sources.length : 0
+      }
     },
-    memory_usage: process.memoryUsage(),
-    uptime: process.uptime(),
+
+    // Performance Metrics
+    performance: {
+      cache_efficiency: {
+        today_news: {
+          hit_rate: todayHitRate + '%',
+          total_requests: todayTotal,
+          efficiency: todayHitRate >= 70 ? '🟢 Excellent' : 
+                     todayHitRate >= 50 ? '🟡 Good' : 
+                     todayHitRate >= 30 ? '🟠 Fair' : '🔴 Poor'
+        },
+        api_responses: {
+          hit_rate: apiHitRate + '%',
+          total_requests: apiTotal,
+          efficiency: apiHitRate >= 60 ? '🟢 Excellent' : 
+                     apiHitRate >= 40 ? '🟡 Good' : 
+                     apiHitRate >= 20 ? '🟠 Fair' : '🔴 Poor'
+        }
+      },
+      memory_efficiency: {
+        heap_usage: ((memory.heapUsed / memory.heapTotal) * 100).toFixed(1) + '%',
+        efficiency: memory.heapUsed / memory.heapTotal < 0.6 ? '🟢 Excellent' : 
+                   memory.heapUsed / memory.heapTotal < 0.8 ? '🟡 Good' : '🔴 High Usage'
+      }
+    },
+
+    // Technical Details (for debugging)
+    technical: {
+      cache_keys: {
+        today_expected: todayKey,
+        today_actual: cache.todayNews.key,
+        api_response_count: cache.responses.size,
+        archive_count: cache.archives.size
+      },
+      timestamps: {
+        current_time: new Date().toISOString(),
+        last_today_update: cache.todayNews.lastUpdate ? new Date(cache.todayNews.lastUpdate).toISOString() : null,
+        last_metadata_update: cache.metadata.lastUpdate ? new Date(cache.metadata.lastUpdate).toISOString() : null
+      },
+      raw_memory: memory
+    }
   });
 });
 
