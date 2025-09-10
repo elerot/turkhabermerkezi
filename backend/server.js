@@ -780,38 +780,44 @@ function getTopSources(newsArray) {
 
 // 🔄 ENHANCED FETCH WITH ARCHIVE STORAGE
 async function fetchNews() {
-  console.log("📡 RSS haberleri çekiliyor...");
-  
-  // Check if day has changed and clear today's news if needed
-  const currentTodayKey = getTodayKey();
-  if (cache.todayNews.key && cache.todayNews.key !== currentTodayKey) {
-    console.log(`📅 Gün değişti! Önceki gün: ${cache.todayNews.key}, Yeni gün: ${currentTodayKey}`);
-    console.log("🧹 Bugünün haberleri temizleniyor...");
+  try {
+    console.log("📡 RSS haberleri çekiliyor...");
     
-    // Clear today's news array and cache
-    todayNews.length = 0;
-    cache.todayNews = {
-      data: null,
-      lastUpdate: null,
-      key: null,
-      hits: 0,
-      misses: 0,
-    };
+    // Check if day has changed and clear today's news if needed
+    const currentTodayKey = getTodayKey();
+    if (cache.todayNews.key && cache.todayNews.key !== currentTodayKey) {
+      console.log(`📅 Gün değişti! Önceki gün: ${cache.todayNews.key}, Yeni gün: ${currentTodayKey}`);
+      console.log("🧹 Bugünün haberleri temizleniyor...");
+      
+      // Clear today's news array and cache
+      todayNews.length = 0;
+      cache.todayNews = {
+        data: null,
+        lastUpdate: null,
+        key: null,
+        hits: 0,
+        misses: 0,
+      };
+      
+      // Clear API responses cache since they might contain old data
+      cache.responses.clear();
+      cache.apiStats = { hits: 0, misses: 0 };
+      
+      console.log("✅ Bugünün haberleri temizlendi");
+    }
     
-    // Clear API responses cache since they might contain old data
-    cache.responses.clear();
-    cache.apiStats = { hits: 0, misses: 0 };
-    
-    console.log("✅ Bugünün haberleri temizlendi");
-  }
-  
-  let totalNew = 0;
-  let todayNew = 0;
+    let totalNew = 0;
+    let todayNew = 0;
 
   for (const feed of feeds) {
     try {
       console.log(`🔄 ${feed.name} kontrol ediliyor...`);
       const rss = await parser.parseURL(feed.url);
+      
+      if (!rss || !rss.items) {
+        console.warn(`⚠️ ${feed.name}: RSS items bulunamadı`);
+        continue;
+      }
 
       for (const item of rss.items) {
         if (!item.title || !item.link) continue;
@@ -966,6 +972,11 @@ async function fetchNews() {
     );
   } else {
     console.log(`✅ RSS tamamlandı. Yeni haber: ${totalNew} - Cache preserved`);
+  }
+  } catch (error) {
+    console.error("❌ RSS fetch hatası:", error);
+    console.error("Stack:", error.stack);
+    // Don't throw, just log the error
   }
 }
 
@@ -1979,6 +1990,27 @@ cron.schedule("0 0 * * *", () => {
 setTimeout(() => {
   fetchNews();
 }, 5000);
+
+// Error handling
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Don't exit, let PM2 handle it
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit, let PM2 handle it
+});
+
+// Memory monitoring
+setInterval(() => {
+  const memUsage = process.memoryUsage();
+  const memMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+  if (memMB > 500) { // 500MB'den fazla ise uyar
+    console.warn(`⚠️ High memory usage: ${memMB}MB`);
+  }
+}, 60000); // Her dakika kontrol et
 
 // Graceful shutdown
 process.on("SIGINT", () => {
