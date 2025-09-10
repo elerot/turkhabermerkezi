@@ -191,7 +191,8 @@ export default function NewsApp({
     month: string,
     day: string,
     page: number = 1,
-    category?: string
+    category?: string,
+    search?: string
   ) => {
     let url = "";
 
@@ -221,10 +222,13 @@ export default function NewsApp({
         url += `/${page}`;
       }
 
-      // Kategori parametresini query string olarak ekle
+      // Kategori ve arama parametrelerini query string olarak ekle
       const params = new URLSearchParams();
       if (category && category !== "all") {
         params.set("category", category);
+      }
+      if (search && search.trim() !== "") {
+        params.set("search", search.trim());
       }
       if (params.toString()) {
         url += "?" + params.toString();
@@ -242,10 +246,13 @@ export default function NewsApp({
         }
       }
 
-      // Kategori parametresini query string olarak ekle
+      // Kategori ve arama parametrelerini query string olarak ekle
       const params = new URLSearchParams();
       if (category && category !== "all") {
         params.set("category", category);
+      }
+      if (search && search.trim() !== "") {
+        params.set("search", search.trim());
       }
       if (params.toString()) {
         url += (url.includes("?") ? "&" : "?") + params.toString();
@@ -290,7 +297,7 @@ export default function NewsApp({
     setCurrentPage(1);
     setSourceSearch(""); // Search'i temizle
     // Yeni source değerini kullan, diğerleri mevcut state'ten al
-    const url = buildUrl(source, selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, selectedCategory || "all");
+    const url = buildUrl(source, selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, selectedCategory || "all", searchQuery || "");
     router.push(url);
   };
 
@@ -300,7 +307,7 @@ export default function NewsApp({
     setCurrentPage(1);
     setCategorySearch(""); // Search'i temizle
     // URL'yi güncelle ve sayfayı yenile
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category, searchQuery || "");
     router.push(url);
   };
 
@@ -310,7 +317,7 @@ export default function NewsApp({
     setCategorySearch(""); // Search'i temizle
     setSearchQuery(""); // Arama sorgusunu temizle
     // URL'yi güncelle ve sayfayı yenile
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category);
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", selectedDay || "all", 1, category, "");
     router.push(url);
   };
 
@@ -320,7 +327,7 @@ export default function NewsApp({
     setSelectedMonth("all");
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", year, "all", "all", 1, selectedCategory || "all");
+    const url = buildUrl(selectedSource || "all", year, "all", "all", 1, selectedCategory || "all", searchQuery || "");
     router.push(url);
   };
 
@@ -329,7 +336,7 @@ export default function NewsApp({
     setSelectedMonth(month);
     setSelectedDay("all");
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", month, "all", 1, selectedCategory || "all");
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", month, "all", 1, selectedCategory || "all", searchQuery || "");
     router.push(url);
   };
 
@@ -337,7 +344,7 @@ export default function NewsApp({
     if (!day) return;
     setSelectedDay(day);
     setCurrentPage(1);
-    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", day, 1, selectedCategory || "all");
+    const url = buildUrl(selectedSource || "all", selectedYear || "all", selectedMonth || "all", day, 1, selectedCategory || "all", searchQuery || "");
     router.push(url);
   };
 
@@ -352,7 +359,8 @@ export default function NewsApp({
       selectedMonth || "all",
       selectedDay || "all",
       safePage,
-      selectedCategory || "all"
+      selectedCategory || "all",
+      searchQuery || ""
     );
     router.push(url);
     //fetchNews(safePage); // Sadece page parametresi geç, diğerleri state'ten alınır
@@ -374,7 +382,7 @@ export default function NewsApp({
     setCategorySearch(""); // Kategori search'i temizle
     setSearchQuery(""); // Arama sorgusunu temizle
 
-    const url = buildUrl("all", year, month, day, 1, "all");
+    const url = buildUrl("all", year, month, day, 1, "all", "");
     router.push(url);
   };
 
@@ -460,7 +468,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1, "all");
+        const todayUrl = buildUrl("all", todayYear, todayMonth, todayDay, 1, "all", "");
         router.push(todayUrl);
         break;
 
@@ -481,7 +489,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1, "all");
+        const yesterdayUrl = buildUrl("all", yYear, yMonth, yDay, 1, "all", "");
         router.push(yesterdayUrl);
         break;
 
@@ -499,7 +507,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1, "all");
+        const monthUrl = buildUrl("all", tmYear, tmMonth, "all", 1, "all", "");
         router.push(monthUrl);
         break;
 
@@ -516,7 +524,7 @@ export default function NewsApp({
         setCategorySearch(""); // Kategori search'i temizle
         setSearchQuery(""); // Arama sorgusunu temizle
 
-        const yearUrl = buildUrl("all", tyYear, "all", "all", 1, "all");
+        const yearUrl = buildUrl("all", tyYear, "all", "all", 1, "all", "");
         router.push(yearUrl);
         break;
     }
@@ -1164,8 +1172,9 @@ export default function NewsApp({
     const safeMonth = initialMonth || "all";
     const safeDay = initialDay || "all";
     
-    // URL'den query parametrelerini oku (sadece kategori)
+    // URL'den query parametrelerini oku (kategori ve arama)
     const categoryFromUrl = searchParams.get("category");
+    const searchFromUrl = searchParams.get("search");
 
     // Props'ları kullan (URL segment'leri zaten props olarak geliyor)
     const finalSource = safeSource;
@@ -1174,6 +1183,7 @@ export default function NewsApp({
     const finalDay = parseDayFromInitial(safeDay);
     const finalPage = safePage;
     const finalCategory = categoryFromUrl || selectedCategory;
+    const finalSearch = searchFromUrl || searchQuery;
 
     setSelectedSource(finalSource);
     setSelectedYear(finalYear);
@@ -1181,6 +1191,9 @@ export default function NewsApp({
     setSelectedDay(parseDayFromInitial(finalDay));
     if (categoryFromUrl !== null) {
       setSelectedCategory(categoryFromUrl);
+    }
+    if (searchFromUrl !== null) {
+      setSearchQuery(searchFromUrl);
     }
     setCurrentPage(finalPage);
 
@@ -1190,7 +1203,8 @@ export default function NewsApp({
       category: finalCategory,
       year: finalYear,
       month: finalMonth,
-      day: parseDayFromInitial(finalDay)
+      day: parseDayFromInitial(finalDay),
+      search: finalSearch
     });
   }, [initialSource, initialYear, initialMonth, initialDay, initialPage, searchParams]);
 
