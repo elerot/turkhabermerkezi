@@ -336,6 +336,19 @@ function isCacheValid(cacheEntry, ttl) {
 function getTodayNewsFromCache() {
   const todayKey = getTodayKey();
 
+  // Check if day has changed and clear cache if needed
+  if (cache.todayNews.key && cache.todayNews.key !== todayKey) {
+    console.log(`📅 Gün değişti! Cache temizleniyor. Önceki: ${cache.todayNews.key}, Yeni: ${todayKey}`);
+    cache.todayNews = {
+      data: null,
+      lastUpdate: null,
+      key: null,
+      hits: 0,
+      misses: 0,
+    };
+    todayNews.length = 0; // Clear the array too
+  }
+
   // Check if today's cache is valid
   if (
     cache.todayNews.data &&
@@ -768,6 +781,30 @@ function getTopSources(newsArray) {
 // 🔄 ENHANCED FETCH WITH ARCHIVE STORAGE
 async function fetchNews() {
   console.log("📡 RSS haberleri çekiliyor...");
+  
+  // Check if day has changed and clear today's news if needed
+  const currentTodayKey = getTodayKey();
+  if (cache.todayNews.key && cache.todayNews.key !== currentTodayKey) {
+    console.log(`📅 Gün değişti! Önceki gün: ${cache.todayNews.key}, Yeni gün: ${currentTodayKey}`);
+    console.log("🧹 Bugünün haberleri temizleniyor...");
+    
+    // Clear today's news array and cache
+    todayNews.length = 0;
+    cache.todayNews = {
+      data: null,
+      lastUpdate: null,
+      key: null,
+      hits: 0,
+      misses: 0,
+    };
+    
+    // Clear API responses cache since they might contain old data
+    cache.responses.clear();
+    cache.apiStats = { hits: 0, misses: 0 };
+    
+    console.log("✅ Bugünün haberleri temizlendi");
+  }
+  
   let totalNew = 0;
   let todayNew = 0;
 
@@ -1670,6 +1707,7 @@ app.post("/api/clear-cache", (req, res) => {
         break;
       case "today":
         cache.todayNews = { data: null, lastUpdate: null, key: null, hits: 0, misses: 0 };
+        todayNews.length = 0; // Clear the array too
         break;
       case "api":
         cache.responses.clear();
@@ -1685,6 +1723,13 @@ app.post("/api/clear-cache", (req, res) => {
           dates: null,
           lastUpdate: null,
         };
+        break;
+      case "daily":
+        // Clear today's news and reset for new day
+        todayNews.length = 0;
+        cache.todayNews = { data: null, lastUpdate: null, key: null, hits: 0, misses: 0 };
+        cache.responses.clear();
+        cache.apiStats = { hits: 0, misses: 0 };
         break;
       default:
         return res.status(400).json({ error: "Invalid cache type" });
@@ -1893,6 +1938,41 @@ cron.schedule("0 * * * *", () => {
   console.log(
     `✅ Cache cleanup tamamlandı. API: ${cache.responses.size}, Archives: ${cache.archives.size}`
   );
+});
+
+// Daily cache cleanup at midnight (00:00) - Clear today's news cache
+cron.schedule("0 0 * * *", () => {
+  console.log("🌅 Günlük cache temizleme başladı...");
+  
+  const todayKey = getTodayKey();
+  const previousDay = new Date();
+  previousDay.setDate(previousDay.getDate() - 1);
+  const previousDayKey = getDateKey(previousDay);
+  
+  // Clear today's news array and cache
+  todayNews.length = 0; // Clear the array
+  cache.todayNews = {
+    data: null,
+    lastUpdate: null,
+    key: null,
+    hits: 0,
+    misses: 0,
+  };
+  
+  // Clear all API responses cache (since they might contain old data)
+  cache.responses.clear();
+  cache.apiStats = { hits: 0, misses: 0 };
+  
+  // Clear metadata cache
+  cache.metadata = {
+    sources: null,
+    years: null,
+    dates: null,
+    lastUpdate: null,
+  };
+  
+  console.log(`✅ Günlük cache temizleme tamamlandı. Yeni gün: ${todayKey}, Önceki gün: ${previousDayKey}`);
+  console.log(`📊 Cache durumu: todayNews=${todayNews.length}, API responses=${cache.responses.size}, Archives=${cache.archives.size}`);
 });
 
 // Initial fetch on startup
