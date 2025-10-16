@@ -1076,35 +1076,37 @@ export default function NewsApp({
      fetchStats();
      // fetchNews burada YOK - props useEffect'i çekecek
 
-     // Google AdSense Banner'ı initialize et (üst)
+     // Google AdSense Sidebar'ı initialize et (sol taraf)
      if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT) {
-       const initializeGoogleBanner = () => {
+       const initializeGoogleSidebar = () => {
          if ((window as any).adsbygoogle) {
            try {
-             const bannerElement = document.getElementById('google-adsense-banner');
-             if (bannerElement) {
-               bannerElement.innerHTML = '';
+             const sidebarElement = document.getElementById('google-adsense-sidebar');
+             if (sidebarElement) {
+               sidebarElement.innerHTML = '';
                
                const adElement = document.createElement('ins');
                adElement.className = 'adsbygoogle';
-               adElement.style.display = 'block';
+               adElement.style.display = 'inline-block';
+               adElement.style.width = '192px';
+               adElement.style.height = 'calc(100vh - 6rem)';
                adElement.setAttribute('data-ad-client', process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '');
                adElement.setAttribute('data-ad-slot', process.env.NEXT_PUBLIC_ADSENSE_SLOT || '');
-               adElement.setAttribute('data-ad-format', 'auto');
-               adElement.setAttribute('data-full-width-responsive', 'true');
+               adElement.setAttribute('data-ad-format', 'vertical');
+               adElement.setAttribute('data-full-width-responsive', 'false');
                
-               bannerElement.appendChild(adElement);
+               sidebarElement.appendChild(adElement);
                
                setTimeout(() => {
                  try {
                    (window as any).adsbygoogle.push({});
                  } catch (err) {
-                   console.warn("Google Banner AdSense push failed:", err);
+                   console.warn("Google Sidebar AdSense push failed:", err);
                  }
                }, 100);
              }
            } catch (err) {
-             console.warn("Google Banner initialization failed:", err);
+             console.warn("Google Sidebar initialization failed:", err);
            }
          }
        };
@@ -1114,13 +1116,13 @@ export default function NewsApp({
        // Wait for AdSense to be ready
        if ((window as any).adsbygoogle) {
          setTimeout(() => {
-           initializeGoogleBanner();
+           initializeGoogleSidebar();
          }, 500);
        } else {
          const checkInterval = setInterval(() => {
            if ((window as any).adsbygoogle) {
              clearInterval(checkInterval);
-             initializeGoogleBanner();
+             initializeGoogleSidebar();
            }
          }, 1000);
          
@@ -1275,7 +1277,34 @@ export default function NewsApp({
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8">
+      {/* Ana Container - Sol Reklam ve Sağ İçerik */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 flex gap-6">
+        {/* Sol Taraf - Sticky Google Reklam (Sadece desktop'ta görünür) */}
+        {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+          <aside className="hidden xl:block w-48 flex-shrink-0">
+            <div className="sticky top-20">
+              <div className="w-full bg-gray-100 rounded-lg border overflow-hidden shadow-sm relative">
+                <div
+                  id="google-adsense-sidebar"
+                  className="w-full h-full"
+                  style={{ 
+                    backgroundColor: "#f5f5f5", 
+                    minHeight: "calc(100vh - 6rem)",
+                    maxHeight: "calc(100vh - 6rem)"
+                  }}
+                />
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-blue-600 text-white text-xs">
+                    REKLAM
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </aside>
+        )}
+
+        {/* Sağ Taraf - Ana İçerik */}
+        <div className="flex-1 min-w-0">
         {/* Search Bar */}
         <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
           <div className="flex items-center space-x-2 mb-2">
@@ -1719,24 +1748,6 @@ export default function NewsApp({
           </div>
         )}
 
-                 {/* Google AdSense Banner - En üstte tek satır */}
-         {process.env.NEXT_PUBLIC_ENVIRONMENT === 'production' && process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
-           <div className="mb-6">
-             <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg border relative overflow-hidden shadow-sm">
-               <div
-                 id="google-adsense-banner"
-                 className="w-full h-full"
-                 style={{ backgroundColor: "#f5f5f5", minHeight: "80px" }}
-               />
-               <div className="absolute top-2 right-2">
-                 <Badge className="bg-blue-600 text-white text-xs">
-                   REKLAM
-                 </Badge>
-               </div>
-             </div>
-           </div>
-         )}
-
          {/* News Grid */}
          {!news || news.length === 0 ? (
            <div className="text-center py-12">
@@ -2006,7 +2017,10 @@ export default function NewsApp({
             <PaginationControls />
           </>
         )}
+        </div>
+        {/* Ana İçerik Div Sonu */}
       </div>
+      {/* Flex Container Sonu */}
     </div>
   );
 }
