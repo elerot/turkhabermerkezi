@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const cron = require("node-cron");
+const { LRUCache } = require("lru-cache");
 
 const app = express();
 const parser = new Parser();
@@ -127,7 +128,7 @@ function createTurkishSlug(text) {
 let todayNews = [];
 let lastUpdate = new Date();
 
-// 🚀 SMART CACHE SYSTEM
+// 🚀 SMART CACHE SYSTEM - WITH LRU
 const cache = {
   // Today's news cache
   todayNews: {
@@ -138,15 +139,36 @@ const cache = {
     misses: 0,
   },
 
-  // API responses cache
-  responses: new Map(),
+  // API responses cache - LRU optimized
+  responses: new LRUCache({
+    max: 500, // Maksimum 500 farklı API sorgusu
+    ttl: 1000 * 60 * 2, // 2 dakika TTL
+    updateAgeOnGet: true, // Erişildiğinde TTL yenilenir
+    allowStale: false, // Süresi dolan öğeler dönmez
+    dispose: (value, key) => {
+      console.log(`🗑️ API Cache evicted: ${key.substring(0, 50)}...`);
+    }
+  }),
+  
   apiStats: {
     hits: 0,
     misses: 0,
   },
 
-  // Archive cache
-  archives: new Map(),
+  // Archive cache - LRU optimized with size limit
+  archives: new LRUCache({
+    max: 1000, // Maksimum 1000 farklı archive sorgusu
+    ttl: 1000 * 60 * 30, // 30 dakika TTL
+    maxSize: 100 * 1024 * 1024, // 100MB maksimum boyut
+    sizeCalculation: (value) => {
+      return JSON.stringify(value).length;
+    },
+    updateAgeOnGet: true,
+    allowStale: false,
+    dispose: (value, key) => {
+      console.log(`🗑️ Archive Cache evicted: ${key}`);
+    }
+  }),
 
   // Metadata cache
   metadata: {
@@ -157,12 +179,11 @@ const cache = {
   },
 };
 
-// Cache configuration
+// Cache configuration - LRU'lar kendi TTL'lerini yönetir
 const CACHE_CONFIG = {
-  TODAY_TTL: 5 * 60 * 1000, // 5 minutes for today's news
-  API_TTL: 2 * 60 * 1000, // 2 minutes for API responses
-  ARCHIVE_TTL: 30 * 60 * 1000, // 30 minutes for archives
-  METADATA_TTL: 10 * 60 * 1000, // 10 minutes for metadata
+  TODAY_TTL: 5 * 60 * 1000, // 5 minutes for today's news (manual cache için)
+  METADATA_TTL: 10 * 60 * 1000, // 10 minutes for metadata (manual cache için)
+  // API_TTL ve ARCHIVE_TTL artık LRU constructor'ında tanımlı
 };
 
 // Helper functions
@@ -305,25 +326,25 @@ function getTodayKey() {
 
 // 🧠 CACHE MANAGEMENT FUNCTIONS
 
-// Generate cache key for API requests
+// Generate optimized cache key for API requests - HASH BASED
 function generateCacheKey(req) {
-  const {
-    page = 1,
-    limit = 30,
-    source,
-    category,
-    year,
-    month,
-    day,
-    date,
-    hour,
-    search,
-    q,
-  } = req.query;
-  const searchQuery = search || q || "all";
-  return `api_${page}_${limit}_${source || "all"}_${category || "all"}_${year || "all"}_${
-    month || "all"
-  }_${day || "all"}_${date || "all"}_${hour || "all"}_${searchQuery}`;
+  // Sort query parameters for consistent hashing
+  const params = { ...req.query };
+  const sortedParams = Object.keys(params)
+    .sort()
+    .reduce((acc, key) => {
+      acc[key] = params[key];
+      return acc;
+    }, {});
+  
+  // Create MD5 hash (32 karakter) - çok daha kısa ve hızlı
+  const paramsString = JSON.stringify(sortedParams);
+  const hash = crypto.createHash('md5').update(paramsString).digest('hex');
+  
+  // Debugging için readable prefix ekle (isteğe bağlı)
+  const readablePrefix = `p${params.page || 1}_l${params.limit || 30}`;
+  
+  return `${readablePrefix}_${hash}`;
 }
 
 // Check if cache is valid
@@ -475,14 +496,10 @@ function invalidateCache() {
   console.log("🧹 Cache invalidation triggered");
 
   // DON'T clear today's cache - let it be updated with new data instead
-  // cache.todayNews = {
-  //   data: null,
-  //   lastUpdate: null,
-  //   key: null,
-  // };
 
-  // Clear API responses cache (but keep stats)
+  // Clear API responses cache (LRU clear method)
   cache.responses.clear();
+  console.log("  ✓ API responses cache cleared");
 
   // Clear metadata cache
   cache.metadata = {
@@ -491,9 +508,10 @@ function invalidateCache() {
     dates: null,
     lastUpdate: null,
   };
+  console.log("  ✓ Metadata cache cleared");
 
-  // Keep archive cache (less likely to change)
-  console.log("✅ Cache invalidated successfully (today's cache preserved)");
+  // Keep archive cache (less likely to change) - LRU will handle TTL
+  console.log("✅ Cache invalidated successfully (today's cache preserved, archives kept with TTL)");
 }
 
 // Create hierarchical archive structure
@@ -644,6 +662,59 @@ function loadTodayNews() {
   }
 }
 
+// 🔥 CACHE WARMING - Startup'ta popüler dataları preload et
+async function warmupCache() {
+  console.log('🔥 Cache warming başladı...');
+  const startTime = Date.now();
+  
+  try {
+    // 1. Bugünün haberlerini cache'le
+    getTodayNewsFromCache();
+    console.log('  ✓ Bugünün haberleri cache\'lendi');
+    
+    // 2. Son 7 günün haberlerini parallel olarak preload et
+    const today = new Date();
+    const recentDaysPromises = [];
+    
+    for (let i = 1; i <= 7; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateKey = getDateKey(date);
+      const [year, month, day] = dateKey.split("-");
+      const archiveFile = path.join(ARCHIVES_DIR, year, month, `${day}.json`);
+      
+      if (fs.existsSync(archiveFile)) {
+        const cacheKey = `archive_${year}_${month}_${day}`;
+        const readPromise = fs.promises.readFile(archiveFile, "utf8")
+          .then(data => {
+            const parsedData = JSON.parse(data);
+            cache.archives.set(cacheKey, parsedData);
+            return parsedData.length;
+          })
+          .catch(err => {
+            console.warn(`  ⚠️ ${archiveFile} okunamadı:`, err.message);
+            return 0;
+          });
+        recentDaysPromises.push(readPromise);
+      }
+    }
+    
+    const results = await Promise.all(recentDaysPromises);
+    const totalNewsPreloaded = results.reduce((sum, count) => sum + count, 0);
+    console.log(`  ✓ Son 7 gün cache'lendi (${totalNewsPreloaded} haber)`);
+    
+    // 3. Metadata cache'i initialize et
+    getMetadataFromCache();
+    console.log('  ✓ Metadata cache\'lendi');
+    
+    const duration = Date.now() - startTime;
+    console.log(`✅ Cache warming tamamlandı (${duration}ms)`);
+    console.log(`📊 Cache durumu: Archives=${cache.archives.size}, API Responses=${cache.responses.size}`);
+  } catch (error) {
+    console.error('❌ Cache warming hatası:', error);
+  }
+}
+
 // Save article to archive file
 function saveArticleToArchive(article) {
   try {
@@ -653,8 +724,27 @@ function saveArticleToArchive(article) {
     // Read existing articles for this date
     let existingArticles = [];
     if (fs.existsSync(archiveFile)) {
-      const data = fs.readFileSync(archiveFile, "utf8");
-      existingArticles = JSON.parse(data);
+      try {
+        const data = fs.readFileSync(archiveFile, "utf8");
+        existingArticles = JSON.parse(data);
+      } catch (parseError) {
+        console.error(`⚠️ Corrupt archive file detected: ${archiveFile}`);
+        console.error(`   Error: ${parseError.message}`);
+        console.error(`   Creating backup and starting fresh...`);
+        
+        // Bozuk dosyayı backup'la
+        const backupFile = archiveFile.replace('.json', `.corrupt-${Date.now()}.json`);
+        try {
+          fs.renameSync(archiveFile, backupFile);
+          console.log(`   ✅ Backup saved: ${backupFile}`);
+        } catch (backupError) {
+          console.error(`   ❌ Backup failed, deleting corrupt file...`);
+          fs.unlinkSync(archiveFile);
+        }
+        
+        // Fresh start with empty array
+        existingArticles = [];
+      }
     }
 
     // Check if article already exists (by content_hash)
@@ -706,9 +796,13 @@ function updateArchiveSummaries(dateKey) {
       days.forEach(day => {
         const dayFile = path.join(monthDir, `${day}.json`);
         if (fs.existsSync(dayFile)) {
-          const dayData = JSON.parse(fs.readFileSync(dayFile, "utf8"));
-          totalNews += dayData.length;
-          allNews.push(...dayData);
+          try {
+            const dayData = JSON.parse(fs.readFileSync(dayFile, "utf8"));
+            totalNews += dayData.length;
+            allNews.push(...dayData);
+          } catch (parseError) {
+            console.warn(`⚠️ Skipping corrupt file in summary: ${dayFile}`);
+          }
         }
       });
 
@@ -743,8 +837,12 @@ function updateArchiveSummaries(dateKey) {
       months.forEach(month => {
         const monthSummaryFile = path.join(yearDir, month, "summary.json");
         if (fs.existsSync(monthSummaryFile)) {
-          const monthSummary = JSON.parse(fs.readFileSync(monthSummaryFile, "utf8"));
-          yearTotalNews += monthSummary.totalNews || 0;
+          try {
+            const monthSummary = JSON.parse(fs.readFileSync(monthSummaryFile, "utf8"));
+            yearTotalNews += monthSummary.totalNews || 0;
+          } catch (parseError) {
+            console.warn(`⚠️ Skipping corrupt summary: ${monthSummaryFile}`);
+          }
         }
       });
 
@@ -982,25 +1080,21 @@ async function fetchNews() {
 
 // 🚀 CACHED API ROUTES
 
-// Get news with smart caching from archive files
-app.get("/api/news", (req, res) => {
+// Get news with smart caching from archive files - LRU OPTIMIZED + PARALLEL READING
+app.get("/api/news", async (req, res) => {
   const startTime = Date.now();
   const cacheKey = generateCacheKey(req);
 
-  // Check cache first
-  if (cache.responses.has(cacheKey)) {
-    const cached = cache.responses.get(cacheKey);
-    if (isCacheValid(cached, CACHE_CONFIG.API_TTL)) {
-      cache.apiStats.hits++;
-      console.log(`📦 Cache HIT: API response [${Date.now() - startTime}ms] (hits: ${cache.apiStats.hits})`);
-      return res.json(cached.data);
-    } else {
-      cache.responses.delete(cacheKey);
-    }
+  // Check LRU cache first (otomatik TTL yönetimi)
+  const cached = cache.responses.get(cacheKey);
+  if (cached) {
+    cache.apiStats.hits++;
+    console.log(`📦 Cache HIT: API response [${Date.now() - startTime}ms] (hits: ${cache.apiStats.hits})`);
+    return res.json(cached);
   }
 
   cache.apiStats.misses++;
-  console.log(`🔄 Cache MISS: Generating API response [${cacheKey}] (misses: ${cache.apiStats.misses})`);
+  console.log(`🔄 Cache MISS: Generating API response [${cacheKey.substring(0, 50)}...] (misses: ${cache.apiStats.misses})`);
 
   const {
     page = 1,
@@ -1038,7 +1132,7 @@ app.get("/api/news", (req, res) => {
         }
       }
     }
-    // If specific month is requested
+    // If specific month is requested - PARALLEL FILE READING
     else if (month && month !== "all" && year && year !== "all") {
       const monthPadded = month.padStart(2, "0");
       const monthDir = path.join(ARCHIVES_DIR, year, monthPadded);
@@ -1049,22 +1143,28 @@ app.get("/api/news", (req, res) => {
           .sort()
           .reverse(); // Newest first
         
-        for (const dayFile of dayFiles) {
+        // Parallel okuma için promises dizisi oluştur
+        const fileReadPromises = dayFiles.map(async (dayFile) => {
           const day = dayFile.replace('.json', '');
           const dateKey = `${year}-${monthPadded}-${day.padStart(2, "0")}`;
           
           // If it's today's date, use cache
           if (dateKey === getTodayKey()) {
-            filteredNews.push(...getTodayNewsFromCache());
+            return getTodayNewsFromCache();
           } else {
-            // For other dates, load from archive file
-            const dayData = JSON.parse(fs.readFileSync(path.join(monthDir, dayFile), "utf8"));
-            filteredNews.push(...dayData);
+            // For other dates, load from archive file (async)
+            const filePath = path.join(monthDir, dayFile);
+            const data = await fs.promises.readFile(filePath, "utf8");
+            return JSON.parse(data);
           }
-        }
+        });
+        
+        // Tüm dosyaları paralel oku
+        const results = await Promise.all(fileReadPromises);
+        filteredNews = results.flat();
       }
     }
-    // If specific year is requested
+    // If specific year is requested - PARALLEL FILE READING
     else if (year && year !== "all") {
       const yearDir = path.join(ARCHIVES_DIR, year);
       
@@ -1074,6 +1174,9 @@ app.get("/api/news", (req, res) => {
           .sort()
           .reverse(); // Newest first
         
+        // Tüm ay ve günler için parallel okuma
+        const allFilePromises = [];
+        
         for (const monthDir of months) {
           const monthPath = path.join(yearDir, monthDir);
           const dayFiles = fs.readdirSync(monthPath)
@@ -1081,29 +1184,40 @@ app.get("/api/news", (req, res) => {
             .sort()
             .reverse();
           
-          for (const dayFile of dayFiles) {
+          dayFiles.forEach(dayFile => {
             const day = dayFile.replace('.json', '');
             const dateKey = `${year}-${monthDir}-${day.padStart(2, "0")}`;
             
-            // If it's today's date, use cache
-            if (dateKey === getTodayKey()) {
-              filteredNews.push(...getTodayNewsFromCache());
-            } else {
-              // For other dates, load from archive file
-              const dayData = JSON.parse(fs.readFileSync(path.join(monthPath, dayFile), "utf8"));
-              filteredNews.push(...dayData);
-            }
-          }
+            const readPromise = (async () => {
+              // If it's today's date, use cache
+              if (dateKey === getTodayKey()) {
+                return getTodayNewsFromCache();
+              } else {
+                // For other dates, load from archive file (async)
+                const filePath = path.join(monthPath, dayFile);
+                const data = await fs.promises.readFile(filePath, "utf8");
+                return JSON.parse(data);
+              }
+            })();
+            
+            allFilePromises.push(readPromise);
+          });
         }
+        
+        // Tüm dosyaları paralel oku
+        const results = await Promise.all(allFilePromises);
+        filteredNews = results.flat();
       }
     }
-    // If no specific date filters, use today's news + recent days (last 30 days)
+    // If no specific date filters, use today's news + recent days (last 30 days) - PARALLEL
     else {
       // Start with today's news from cache
       filteredNews = [...getTodayNewsFromCache()];
       
-      // Add recent days (last 30 days)
+      // Add recent days (last 30 days) - parallel okuma
       const today = new Date();
+      const recentDaysPromises = [];
+      
       for (let i = 1; i <= 30; i++) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
@@ -1113,14 +1227,25 @@ app.get("/api/news", (req, res) => {
           ARCHIVES_DIR,
           year,
           month,
-          `${day}.json` // Sadece gün numarası
+          `${day}.json`
         );
         
         if (fs.existsSync(archiveFile)) {
-          const dayData = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
-          filteredNews.push(...dayData);
+          const readPromise = fs.promises.readFile(archiveFile, "utf8")
+            .then(data => JSON.parse(data))
+            .catch(err => {
+              console.warn(`Error reading ${archiveFile}:`, err.message);
+              return [];
+            });
+          recentDaysPromises.push(readPromise);
         }
       }
+      
+      // Tüm dosyaları paralel oku
+      const recentDaysData = await Promise.all(recentDaysPromises);
+      recentDaysData.forEach(dayData => {
+        filteredNews.push(...dayData);
+      });
     }
 
     // Legacy date support
@@ -1189,11 +1314,8 @@ app.get("/api/news", (req, res) => {
       },
     };
 
-    // Cache the response
-    cache.responses.set(cacheKey, {
-      data: response,
-      lastUpdate: Date.now(),
-    });
+    // Cache the response (LRU otomatik TTL yönetimi yapar)
+    cache.responses.set(cacheKey, response);
 
     console.log(
       `✅ API response generated and cached [${Date.now() - startTime}ms]`
@@ -1268,18 +1390,16 @@ app.get("/api/days/:year/:month", (req, res) => {
   }
 });
 
-// Archive routes with caching
+// Archive routes with LRU caching
 app.get("/api/archive/:year/:month/:day", (req, res) => {
   const { year, month, day } = req.params;
   const cacheKey = `archive_${year}_${month}_${day}`;
 
-  // Check cache
-  if (cache.archives.has(cacheKey)) {
-    const cached = cache.archives.get(cacheKey);
-    if (isCacheValid(cached, CACHE_CONFIG.ARCHIVE_TTL)) {
-      console.log(`📦 Cache HIT: Archive ${cacheKey}`);
-      return res.json(cached.data);
-    }
+  // Check LRU cache (otomatik TTL)
+  const cached = cache.archives.get(cacheKey);
+  if (cached) {
+    console.log(`📦 Cache HIT: Archive ${cacheKey}`);
+    return res.json(cached);
   }
 
   try {
@@ -1295,16 +1415,18 @@ app.get("/api/archive/:year/:month/:day", (req, res) => {
 
     let data;
     if (fs.existsSync(archiveFile)) {
-      data = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
+      try {
+        data = JSON.parse(fs.readFileSync(archiveFile, "utf8"));
+      } catch (parseError) {
+        console.error(`⚠️ Corrupt archive file: ${archiveFile}`, parseError.message);
+        data = []; // Return empty array for corrupt files
+      }
     } else {
       data = []; // No fallback data needed
     }
 
-    // Cache the result
-    cache.archives.set(cacheKey, {
-      data,
-      lastUpdate: Date.now(),
-    });
+    // Cache the result (LRU otomatik TTL)
+    cache.archives.set(cacheKey, data);
 
     console.log(`✅ Archive generated and cached: ${cacheKey}`);
     res.json(data);
@@ -1317,13 +1439,11 @@ app.get("/api/archive/:year/:month", (req, res) => {
   const { year, month } = req.params;
   const cacheKey = `archive_${year}_${month}`;
 
-  // Check cache
-  if (cache.archives.has(cacheKey)) {
-    const cached = cache.archives.get(cacheKey);
-    if (isCacheValid(cached, CACHE_CONFIG.ARCHIVE_TTL)) {
-      console.log(`📦 Cache HIT: Archive ${cacheKey}`);
-      return res.json(cached.data);
-    }
+  // Check LRU cache (otomatik TTL)
+  const cached = cache.archives.get(cacheKey);
+  if (cached) {
+    console.log(`📦 Cache HIT: Archive ${cacheKey}`);
+    return res.json(cached);
   }
 
   try {
@@ -1337,7 +1457,17 @@ app.get("/api/archive/:year/:month", (req, res) => {
 
     let data;
     if (fs.existsSync(summaryFile)) {
-      data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+      try {
+        data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+      } catch (parseError) {
+        console.error(`⚠️ Corrupt summary file: ${summaryFile}`, parseError.message);
+        data = {
+          year: parseInt(year),
+          month: parseInt(month),
+          totalNews: 0,
+          news: [],
+        };
+      }
     } else {
       data = {
         year: parseInt(year),
@@ -1347,11 +1477,8 @@ app.get("/api/archive/:year/:month", (req, res) => {
       };
     }
 
-    // Cache the result
-    cache.archives.set(cacheKey, {
-      data,
-      lastUpdate: Date.now(),
-    });
+    // Cache the result (LRU otomatik TTL)
+    cache.archives.set(cacheKey, data);
 
     console.log(`✅ Archive generated and cached: ${cacheKey}`);
     res.json(data);
@@ -1364,13 +1491,11 @@ app.get("/api/archive/:year", (req, res) => {
   const { year } = req.params;
   const cacheKey = `archive_${year}`;
 
-  // Check cache
-  if (cache.archives.has(cacheKey)) {
-    const cached = cache.archives.get(cacheKey);
-    if (isCacheValid(cached, CACHE_CONFIG.ARCHIVE_TTL)) {
-      console.log(`📦 Cache HIT: Archive ${cacheKey}`);
-      return res.json(cached.data);
-    }
+  // Check LRU cache (otomatik TTL)
+  const cached = cache.archives.get(cacheKey);
+  if (cached) {
+    console.log(`📦 Cache HIT: Archive ${cacheKey}`);
+    return res.json(cached);
   }
 
   try {
@@ -1378,7 +1503,16 @@ app.get("/api/archive/:year", (req, res) => {
 
     let data;
     if (fs.existsSync(summaryFile)) {
-      data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+      try {
+        data = JSON.parse(fs.readFileSync(summaryFile, "utf8"));
+      } catch (parseError) {
+        console.error(`⚠️ Corrupt year summary: ${summaryFile}`, parseError.message);
+        data = {
+          year: parseInt(year),
+          totalNews: 0,
+          news: [],
+        };
+      }
     } else {
       data = {
         year: parseInt(year),
@@ -1387,11 +1521,8 @@ app.get("/api/archive/:year", (req, res) => {
       };
     }
 
-    // Cache the result
-    cache.archives.set(cacheKey, {
-      data,
-      lastUpdate: Date.now(),
-    });
+    // Cache the result (LRU otomatik TTL)
+    cache.archives.set(cacheKey, data);
 
     console.log(`✅ Archive generated and cached: ${cacheKey}`);
     res.json(data);
@@ -2031,34 +2162,26 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
 loadTodayNews(); // Load today's news from archive files
 loadRSSFeeds(); // Load feeds on startup
 
+// 🔥 Cache warming - startup sonrası popüler dataları preload et
+setTimeout(() => {
+  warmupCache();
+}, 1000); // 1 saniye sonra başlat (sistem stabilize olduktan sonra)
+
 // Schedule RSS fetching every 5 minutes
 cron.schedule("*/5 * * * *", () => {
   console.log("⏰ Zamanlanmış RSS güncellemesi başladı...");
   fetchNews();
 });
 
-// Cache cleanup every hour (remove expired entries)
-cron.schedule("0 * * * *", () => {
-  console.log("🧹 Cache cleanup başladı...");
-
-  // Clean expired API responses
-  const now = Date.now();
-  for (const [key, value] of cache.responses.entries()) {
-    if (!isCacheValid(value, CACHE_CONFIG.API_TTL)) {
-      cache.responses.delete(key);
-    }
-  }
-
-  // Clean expired archives
-  for (const [key, value] of cache.archives.entries()) {
-    if (!isCacheValid(value, CACHE_CONFIG.ARCHIVE_TTL)) {
-      cache.archives.delete(key);
-    }
-  }
-
-  console.log(
-    `✅ Cache cleanup tamamlandı. API: ${cache.responses.size}, Archives: ${cache.archives.size}`
-  );
+// ✅ LRU Cache otomatik TTL yönetimi yapıyor - manuel cleanup artık gereksiz!
+// LRU cache kendisi expired entry'leri otomatik olarak siler
+// Cache statistics her 30 dakikada bir loglayalım
+cron.schedule("*/30 * * * *", () => {
+  console.log("📊 Cache istatistikleri:");
+  console.log(`  - API Responses: ${cache.responses.size} entry`);
+  console.log(`  - Archives: ${cache.archives.size} entry`);
+  console.log(`  - API Hit Rate: ${cache.apiStats.hits}/${cache.apiStats.hits + cache.apiStats.misses} (${((cache.apiStats.hits / (cache.apiStats.hits + cache.apiStats.misses || 1)) * 100).toFixed(1)}%)`);
+  console.log(`  - Today News Hit Rate: ${cache.todayNews.hits}/${cache.todayNews.hits + cache.todayNews.misses} (${((cache.todayNews.hits / (cache.todayNews.hits + cache.todayNews.misses || 1)) * 100).toFixed(1)}%)`);
 });
 
 // Daily cache cleanup at midnight (00:00) - Clear today's news cache
@@ -2080,8 +2203,9 @@ cron.schedule("0 0 * * *", () => {
     misses: 0,
   };
   
-  // Clear all API responses cache (since they might contain old data)
+  // LRU cache'leri clear et (yeni gün için fresh start)
   cache.responses.clear();
+  cache.archives.clear();
   cache.apiStats = { hits: 0, misses: 0 };
   
   // Clear metadata cache
@@ -2094,6 +2218,11 @@ cron.schedule("0 0 * * *", () => {
   
   console.log(`✅ Günlük cache temizleme tamamlandı. Yeni gün: ${todayKey}, Önceki gün: ${previousDayKey}`);
   console.log(`📊 Cache durumu: todayNews=${todayNews.length}, API responses=${cache.responses.size}, Archives=${cache.archives.size}`);
+  
+  // Yeni gün için cache warming yap
+  setTimeout(() => {
+    warmupCache();
+  }, 5000); // 5 saniye sonra
 });
 
 // Initial fetch on startup
@@ -2124,16 +2253,22 @@ setInterval(() => {
 
 // Graceful shutdown
 process.on("SIGINT", () => {
-  console.log("💾 Kapatılıyor, veriler kaydediliyor...");
-  saveNewsData();
-
+  console.log("💾 Kapatılıyor...");
+  
   // Cache statistics on shutdown
   console.log("📊 Final cache stats:", {
     today_news: cache.todayNews.data ? cache.todayNews.data.length : 0,
+    today_cache_hits: cache.todayNews.hits,
+    today_cache_misses: cache.todayNews.misses,
     api_responses: cache.responses.size,
+    api_hits: cache.apiStats.hits,
+    api_misses: cache.apiStats.misses,
     archives: cache.archives.size,
     metadata_cached: !!cache.metadata.sources,
   });
+  
+  console.log("✅ Tüm veriler zaten archive dosyalarına kaydedildi");
+  console.log("👋 Güle güle!");
 
   process.exit(0);
 });

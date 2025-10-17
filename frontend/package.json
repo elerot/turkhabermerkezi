@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3000",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "cleanup": "sh cleanup-ports.sh",
+    "dev:clean": "sh cleanup-ports.sh && next dev --turbopack -p 3000"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
