@@ -18,8 +18,8 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001', 
-      'https://saatdakika.com',
-      'https://www.saatdakika.com'
+      'https://www.saatdakika.com',
+      'https://saatdakika.com'
     ];
     
     // Origin yoksa (Postman, curl gibi) veya izin verilen listede ise kabul et
@@ -2005,7 +2005,6 @@ app.get("/api/robots.txt", cors(seoCorsOptions), (req, res) => {
   res.send(`User-agent: *
 Allow: /
 
-Sitemap: https://saatdakika.com/api/sitemap.xml
 Sitemap: https://www.saatdakika.com/api/sitemap.xml`);
 });
 
@@ -2022,7 +2021,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
   
   <!-- Ana sayfa (bugüne redirect) -->
   <url>
-    <loc>https://saatdakika.com</loc>
+    <loc>https://www.saatdakika.com</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
@@ -2033,7 +2032,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
     if (metadata.years) {
       metadata.years.forEach((year) => {
         sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}</loc>
+    <loc>https://www.saatdakika.com/${year}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -2052,7 +2051,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
 
             months.forEach((month) => {
               sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month}</loc>
+    <loc>https://www.saatdakika.com/${year}/${month}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2081,7 +2080,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
                   days.forEach((day) => {
                     // Ana günlük sayfa
                     sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month}/${day}</loc>
+    <loc>https://www.saatdakika.com/${year}/${month}/${day}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
@@ -2091,7 +2090,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
                     // Pagination sayfaları (varsayılan olarak 2-5 sayfa ekle)
                     for (let page = 2; page <= 5; page++) {
                       sitemap += `  <url>
-    <loc>https://saatdakika.com/${year}/${month}/${day}/${page}</loc>
+    <loc>https://www.saatdakika.com/${year}/${month}/${day}/${page}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.7</priority>
@@ -2123,7 +2122,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
         const [year, month, day] = dateKey.split("-");
 
         sitemap += `  <url>
-    <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}</loc>
+    <loc>https://www.saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
@@ -2133,7 +2132,7 @@ app.get("/api/sitemap.xml", cors(seoCorsOptions), (req, res) => {
         // Kaynak pagination (varsayılan olarak 2-3 sayfa ekle)
         for (let page = 2; page <= 3; page++) {
           sitemap += `  <url>
-    <loc>https://saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}/${page}</loc>
+    <loc>https://www.saatdakika.com/source/${sourceSlug}/${year}/${month}/${day}/${page}</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.6</priority>
