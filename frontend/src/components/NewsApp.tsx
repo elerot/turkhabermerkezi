@@ -448,7 +448,7 @@ export default function NewsApp({
   };
 
   const handleQuickDateFilter = (
-    type: "today" | "yesterday" | "thisMonth" | "thisYear"
+    type: "today" | "yesterday" | "thisMonth" | "thisYear" | "lastYearToday" | "lastYearYesterday" | "lastYearThisMonth" | "lastYear"
   ) => {
     const now = new Date();
 
@@ -526,6 +526,86 @@ export default function NewsApp({
 
         const yearUrl = buildUrl("all", tyYear, "all", "all", 1, "all", "");
         router.push(yearUrl);
+        break;
+
+      case "lastYearToday":
+        const lastYearTodayDate = new Date(now);
+        lastYearTodayDate.setFullYear(now.getFullYear() - 1);
+        const lytYear = lastYearTodayDate.getFullYear().toString();
+        const lytMonth = (lastYearTodayDate.getMonth() + 1).toString();
+        const lytDay = lastYearTodayDate.getDate().toString();
+
+        setSelectedSource("all");
+        setSelectedCategory("all");
+        setSelectedYear(lytYear);
+        setSelectedMonth(lytMonth);
+        setSelectedDay(lytDay);
+        setCurrentPage(1);
+        setSourceSearch("");
+        setCategorySearch("");
+        setSearchQuery("");
+
+        const lastYearTodayUrl = buildUrl("all", lytYear, lytMonth, lytDay, 1, "all", "");
+        router.push(lastYearTodayUrl);
+        break;
+
+      case "lastYearYesterday":
+        const lastYearYesterdayDate = new Date(now);
+        lastYearYesterdayDate.setFullYear(now.getFullYear() - 1);
+        lastYearYesterdayDate.setDate(lastYearYesterdayDate.getDate() - 1);
+        const lyyYear = lastYearYesterdayDate.getFullYear().toString();
+        const lyyMonth = (lastYearYesterdayDate.getMonth() + 1).toString();
+        const lyyDay = lastYearYesterdayDate.getDate().toString();
+
+        setSelectedSource("all");
+        setSelectedCategory("all");
+        setSelectedYear(lyyYear);
+        setSelectedMonth(lyyMonth);
+        setSelectedDay(lyyDay);
+        setCurrentPage(1);
+        setSourceSearch("");
+        setCategorySearch("");
+        setSearchQuery("");
+
+        const lastYearYesterdayUrl = buildUrl("all", lyyYear, lyyMonth, lyyDay, 1, "all", "");
+        router.push(lastYearYesterdayUrl);
+        break;
+
+      case "lastYearThisMonth":
+        const lastYearThisMonthDate = new Date(now);
+        lastYearThisMonthDate.setFullYear(now.getFullYear() - 1);
+        const lytmYear = lastYearThisMonthDate.getFullYear().toString();
+        const lytmMonth = (lastYearThisMonthDate.getMonth() + 1).toString();
+
+        setSelectedSource("all");
+        setSelectedCategory("all");
+        setSelectedYear(lytmYear);
+        setSelectedMonth(lytmMonth);
+        setSelectedDay("all");
+        setCurrentPage(1);
+        setSourceSearch("");
+        setCategorySearch("");
+        setSearchQuery("");
+
+        const lastYearThisMonthUrl = buildUrl("all", lytmYear, lytmMonth, "all", 1, "all", "");
+        router.push(lastYearThisMonthUrl);
+        break;
+
+      case "lastYear":
+        const lyYear = (now.getFullYear() - 1).toString();
+
+        setSelectedSource("all");
+        setSelectedCategory("all");
+        setSelectedYear(lyYear);
+        setSelectedMonth("all");
+        setSelectedDay("all");
+        setCurrentPage(1);
+        setSourceSearch("");
+        setCategorySearch("");
+        setSearchQuery("");
+
+        const lastYearUrl = buildUrl("all", lyYear, "all", "all", 1, "all", "");
+        router.push(lastYearUrl);
         break;
     }
   };
@@ -1375,12 +1455,12 @@ export default function NewsApp({
                     Hızlı Tarih:
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickDateFilter("today")}
-                    className="hover:bg-blue-50 hover:border-blue-300"
+                    className="hover:bg-blue-50 hover:border-blue-300 min-w-[90px]"
                   >
                     <Calendar className="h-3 w-3 mr-1" />
                     Bugün
@@ -1389,7 +1469,7 @@ export default function NewsApp({
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickDateFilter("yesterday")}
-                    className="hover:bg-blue-50 hover:border-blue-300"
+                    className="hover:bg-blue-50 hover:border-blue-300 min-w-[90px]"
                   >
                     <Clock className="h-3 w-3 mr-1" />
                     Dün
@@ -1398,7 +1478,7 @@ export default function NewsApp({
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickDateFilter("thisMonth")}
-                    className="hover:bg-green-50 hover:border-green-300"
+                    className="hover:bg-green-50 hover:border-green-300 min-w-[90px]"
                   >
                     <CalendarDays className="h-3 w-3 mr-1" />
                     Bu Ay
@@ -1407,10 +1487,45 @@ export default function NewsApp({
                     variant="outline"
                     size="sm"
                     onClick={() => handleQuickDateFilter("thisYear")}
-                    className="hover:bg-purple-50 hover:border-purple-300"
+                    className="hover:bg-purple-50 hover:border-purple-300 min-w-[90px]"
                   >
                     <Archive className="h-3 w-3 mr-1" />
                     Bu Yıl
+                  </Button>
+                </div>
+                {/* Geçen Yıl Filtreleri */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("lastYearToday")}
+                    className="hover:bg-orange-50 hover:border-orange-300 min-w-[90px]"
+                  >
+                    GY Bugün
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("lastYearYesterday")}
+                    className="hover:bg-orange-50 hover:border-orange-300 min-w-[90px]"
+                  >
+                    GY Dün
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("lastYearThisMonth")}
+                    className="hover:bg-yellow-50 hover:border-yellow-300 min-w-[90px]"
+                  >
+                    GY Bu Ay
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickDateFilter("lastYear")}
+                    className="hover:bg-red-50 hover:border-red-300 min-w-[90px]"
+                  >
+                    Geçen Yıl
                   </Button>
                 </div>
               </div>
@@ -1475,11 +1590,11 @@ export default function NewsApp({
           </div>
 
           <div
-            className={`grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 ${mobileFiltersOpen ? "block" : "hidden md:grid"
+            className={`flex flex-col md:flex-row gap-4 md:gap-4 ${mobileFiltersOpen ? "flex" : "hidden md:flex"
               }`}
           >
             {/* Source Filter */}
-            <div>
+            <div className="md:w-[240px]">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Haber Kaynağı
               </label>
@@ -1529,7 +1644,7 @@ export default function NewsApp({
             </div>
 
             {/* Category Filter */}
-            <div>
+            <div className="md:w-[240px]">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Haber Kategorisi
               </label>
@@ -1579,7 +1694,7 @@ export default function NewsApp({
             </div>
 
             {/* Date Filters */}
-            <div>
+            <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tarih Filtreleri
               </label>
@@ -1590,7 +1705,7 @@ export default function NewsApp({
                   onValueChange={handleYearChange}
                   disabled={!sources || sources.length === 0}
                 >
-                  <SelectTrigger className="w-20 text-sm">
+                  <SelectTrigger className="w-24">
                     <SelectValue placeholder="Yıl" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1609,7 +1724,7 @@ export default function NewsApp({
                   onValueChange={handleMonthChange}
                   disabled={!selectedYear || selectedYear === "all"}
                 >
-                  <SelectTrigger className="w-32 text-sm">
+                  <SelectTrigger className="w-36">
                     <SelectValue placeholder="Ay" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1628,7 +1743,7 @@ export default function NewsApp({
                     onValueChange={handleDayChange}
                     disabled={!selectedYear || !selectedMonth || selectedYear === "all" || selectedMonth === "all"}
                   >
-                    <SelectTrigger className="w-20 text-sm">
+                    <SelectTrigger className="w-24">
                       <SelectValue placeholder="Gün" />
                   </SelectTrigger>
                     <SelectContent>
@@ -1647,6 +1762,7 @@ export default function NewsApp({
                   size="sm"
                   onClick={handleClearAllFilters}
                   className="px-3"
+                  title="Filtreleri Temizle"
                 >
                   ✕
                 </Button>
